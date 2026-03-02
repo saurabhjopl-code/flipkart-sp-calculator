@@ -4,6 +4,15 @@ let allData = [];
 let filteredData = [];
 let visibleCount = 50;
 
+/* -------- Currency Formatter -------- */
+
+function formatCurrency(value){
+  return "₹" + Number(value).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
 /* ---------------- INIT ---------------- */
 
 export function initUI(data){
@@ -18,15 +27,7 @@ export function initUI(data){
   document.getElementById("clearSearch").addEventListener("click", clearSearch);
 }
 
-/* ---------------- HELPERS ---------------- */
-
-const formatCurrency = (value) =>
-  "₹" + Number(value).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-/* ---------------- FILTER SETUP ---------------- */
+/* ---------------- FILTER ---------------- */
 
 function populateCategoryFilter(){
   let select = document.getElementById("categoryFilter");
@@ -52,8 +53,6 @@ function clearSearch(){
   applyFilters();
 }
 
-/* ---------------- FILTER LOGIC ---------------- */
-
 function applyFilters(){
   let search = document.getElementById("searchInput").value.toLowerCase();
   let category = document.getElementById("categoryFilter").value;
@@ -74,7 +73,7 @@ function loadMore(){
   updateSummary();
 }
 
-/* ---------------- TABLE RENDER ---------------- */
+/* ---------------- TABLE ---------------- */
 
 function renderTable(){
   let body = document.getElementById("tableBody");
@@ -112,8 +111,6 @@ function renderTable(){
   });
 }
 
-/* ---------------- SUMMARY ---------------- */
-
 function updateSummary(){
   let total = filteredData.length;
   let showing = Math.min(visibleCount, total);
@@ -122,7 +119,7 @@ function updateSummary(){
     `Total: ${total} | Showing: ${showing}`;
 }
 
-/* ---------------- EXPORT FULL DATA ---------------- */
+/* ---------------- EXPORT ---------------- */
 
 function exportFullData(){
 
@@ -169,7 +166,6 @@ function exportFullData(){
       result.IncomeTaxCredit.toFixed(2),
       result.EffectiveNet.toFixed(2)
     ].join(","));
-
   });
 
   let blob = new Blob([csv.join("\n")], { type: "text/csv" });
