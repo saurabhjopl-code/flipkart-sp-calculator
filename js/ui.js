@@ -127,12 +127,7 @@ function renderTable() {
 
   filteredData.slice(0, visibleCount).forEach(row => {
 
-    const result = calculateSP(
-      row.cat,
-      row.simTP,
-      row.mp,
-      row.brand
-    );
+    const result = calculateSP(row, data);
 
     const GSTonFees =
       (result.CommissionGST || 0) +
