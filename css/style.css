@@ -121,3 +121,19 @@ th {
   height: 32px;
   width: auto;
 }
+.expand-btn{
+background:none;
+border:none;
+cursor:pointer;
+font-size:14px;
+}
+
+.breakdown-row td{
+background:#fafafa;
+padding:15px;
+}
+
+.breakdown-box{
+line-height:1.6;
+font-size:13px;
+}
