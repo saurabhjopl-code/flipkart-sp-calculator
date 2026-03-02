@@ -70,7 +70,7 @@ function renderTable(){
 
   filteredData.slice(0, visibleCount).forEach(row=>{
 
-    let result = calculateSP(row.cat, row.simTP, row.mp);
+    let result = calculateSP(row.cat, row.simTP, row.mp, row.brand);
 
     let tr = document.createElement("tr");
 
