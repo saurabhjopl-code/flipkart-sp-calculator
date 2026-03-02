@@ -1,16 +1,24 @@
-/* ===============================
-   MULTI-SHEET DATA LOADER V2.1
-=============================== */
+/* =====================================
+   MASTER DATA LOADER – FK + MYNTRA
+===================================== */
 
 const BASE_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vR-yEqk-MG6suolRPrWfm4ROxjepofRKJM93s9wgGuB_PPgqykpwWiOEOP_tT4ver5a-tCyFGw4q5Qf/pub?gid=";
 
 const GIDS = {
   sku: "923242779",
-  commission: "277340694",
-  fixed: "63507208",
-  level: "1561068618",
-  gta: "1190451618"
+
+  // Myntra
+  myntra_commission: "277340694",
+  myntra_fixed: "63507208",
+  myntra_level: "1561068618",
+  myntra_gta: "1190451618",
+
+  // Flipkart
+  fk_commission: "381793539",
+  fk_fixed: "1293944430",
+  fk_collection: "1297095727",
+  fk_gta: "275431599"
 };
 
 async function fetchSheet(gid){
@@ -23,24 +31,43 @@ export async function loadAllData(){
 
   const [
     skuRows,
-    commissionRows,
-    fixedRows,
-    levelRows,
-    gtaRows
+
+    myntraCommissionRows,
+    myntraFixedRows,
+    myntraLevelRows,
+    myntraGTARows,
+
+    fkCommissionRows,
+    fkFixedRows,
+    fkCollectionRows,
+    fkGTARows
+
   ] = await Promise.all([
     fetchSheet(GIDS.sku),
-    fetchSheet(GIDS.commission),
-    fetchSheet(GIDS.fixed),
-    fetchSheet(GIDS.level),
-    fetchSheet(GIDS.gta)
+
+    fetchSheet(GIDS.myntra_commission),
+    fetchSheet(GIDS.myntra_fixed),
+    fetchSheet(GIDS.myntra_level),
+    fetchSheet(GIDS.myntra_gta),
+
+    fetchSheet(GIDS.fk_commission),
+    fetchSheet(GIDS.fk_fixed),
+    fetchSheet(GIDS.fk_collection),
+    fetchSheet(GIDS.fk_gta)
   ]);
 
   return {
     skuData: parseSKU(skuRows),
-    commissionData: parseCommission(commissionRows),
-    fixedData: parseFixed(fixedRows),
-    levelMap: parseLevel(levelRows),
-    gtaData: parseGTA(gtaRows)
+
+    commissionData: parseMyntraCommission(myntraCommissionRows),
+    fixedData: parseMyntraFixed(myntraFixedRows),
+    levelMap: parseMyntraLevel(myntraLevelRows),
+    gtaData: parseMyntraGTA(myntraGTARows),
+
+    fkCommission: parseFKCommission(fkCommissionRows),
+    fkFixed: parseFKFixed(fkFixedRows),
+    fkCollection: parseFKCollection(fkCollectionRows),
+    fkGTA: parseFKGTA(fkGTARows)
   };
 }
 
@@ -51,7 +78,6 @@ function parseSKU(rows){
 
   for(let i=1;i<rows.length;i++){
     const [sku, article, tp, mp, fsn, brand] = rows[i];
-
     if(!sku || !article || !tp || !mp) continue;
 
     data.push({
@@ -67,11 +93,10 @@ function parseSKU(rows){
   return data;
 }
 
-/* ================= COMMISSION ================= */
+/* ================= MYNTRA PARSERS ================= */
 
-function parseCommission(rows){
+function parseMyntraCommission(rows){
   const table = {};
-
   for(let i=1;i<rows.length;i++){
     const [brand, article, lower, upper, rate] = rows[i];
     if(!brand) continue;
@@ -85,15 +110,11 @@ function parseCommission(rows){
       rate: parseFloat(rate)
     });
   }
-
   return table;
 }
 
-/* ================= FIXED ================= */
-
-function parseFixed(rows){
+function parseMyntraFixed(rows){
   const table = {};
-
   for(let i=1;i<rows.length;i++){
     const [brand, article, lower, upper, fee] = rows[i];
     if(!brand) continue;
@@ -107,28 +128,20 @@ function parseFixed(rows){
       fee: parseFloat(fee)
     });
   }
-
   return table;
 }
 
-/* ================= LEVEL MAP ================= */
-
-function parseLevel(rows){
+function parseMyntraLevel(rows){
   const map = {};
-
   for(let i=1;i<rows.length;i++){
     const [article, level] = rows[i];
     if(article) map[article.trim()] = level.trim();
   }
-
   return map;
 }
 
-/* ================= GTA ================= */
-
-function parseGTA(rows){
+function parseMyntraGTA(rows){
   const table = {};
-
   for(let i=1;i<rows.length;i++){
     const [level, lower, upper, fee] = rows[i];
     if(!level) continue;
@@ -141,6 +154,75 @@ function parseGTA(rows){
       fee: parseFloat(fee)
     });
   }
+  return table;
+}
 
+/* ================= FLIPKART PARSERS ================= */
+
+function parseFKCommission(rows){
+  const table = {};
+  for(let i=1;i<rows.length;i++){
+    const [category, lower, upper, rate] = rows[i];
+    if(!category) continue;
+
+    if(!table[category]) table[category] = [];
+
+    table[category].push({
+      min: parseFloat(lower),
+      max: parseFloat(upper),
+      rate: parseFloat(rate)
+    });
+  }
+  return table;
+}
+
+function parseFKFixed(rows){
+  const table = {};
+  for(let i=1;i<rows.length;i++){
+    const [category, lower, upper, fee] = rows[i];
+    if(!category) continue;
+
+    if(!table[category]) table[category] = [];
+
+    table[category].push({
+      min: parseFloat(lower),
+      max: parseFloat(upper),
+      fee: parseFloat(fee)
+    });
+  }
+  return table;
+}
+
+function parseFKCollection(rows){
+  const table = {};
+  for(let i=1;i<rows.length;i++){
+    const [category, lower, upper, rate] = rows[i];
+    if(!category) continue;
+
+    if(!table[category]) table[category] = [];
+
+    table[category].push({
+      min: parseFloat(lower),
+      max: parseFloat(upper),
+      rate: parseFloat(rate)
+    });
+  }
+  return table;
+}
+
+function parseFKGTA(rows){
+  const table = {};
+  for(let i=1;i<rows.length;i++){
+    const [category, lower, upper, fee] = rows[i];
+    if(!category) continue;
+
+    if(!table[category]) table[category] = [];
+
+    table[category].push({
+      min: parseFloat(lower),
+      max: parseFloat(upper),
+      fee: parseFloat(fee)
+    });
+  }
   return table;
 }
