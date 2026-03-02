@@ -12,7 +12,7 @@ applyFilters();
 document.getElementById("searchInput").addEventListener("input", handleSearch);
 document.getElementById("categoryFilter").addEventListener("change", applyFilters);
 document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
-document.getElementById("exportBtn").addEventListener("click", exportTable);
+document.getElementById("exportBtn").addEventListener("click", exportFullData);
 document.getElementById("clearSearch").addEventListener("click", clearSearch);
 }
 
@@ -103,25 +103,60 @@ document.getElementById("summaryBar").innerText =
 `Total: ${total} | Showing: ${showing}`;
 }
 
-function exportTable(){
-let table = document.querySelector(".pricing-table");
-let rows = table.querySelectorAll("tr");
+/* ---------------- EXPORT FULL FILTERED DATA ---------------- */
+
+function exportFullData(){
 
 let csv = [];
 
-rows.forEach(row=>{
-let cols = row.querySelectorAll("th, td");
-let rowData = [];
-cols.forEach(col=>{
-rowData.push(col.innerText.replace(/,/g, ""));
-});
-csv.push(rowData.join(","));
+csv.push([
+"SKU",
+"Category",
+"TP",
+"SP",
+"Commission",
+"Collection",
+"Fixed Fee",
+"GST on Fees",
+"TDS",
+"TCS",
+"Bank Settlement",
+"Input GST Credit (GST + TCS)",
+"Income Tax Credit (TDS)",
+"Effective Net"
+].join(","));
+
+filteredData.forEach(row=>{
+let result = calculateSP(row.cat, row.simTP);
+
+let GSTonFees =
+result.CommissionGST +
+result.CollectionGST +
+result.FixedGST;
+
+csv.push([
+row.sku,
+row.cat,
+row.simTP,
+result.SP.toFixed(2),
+result.Commission.toFixed(2),
+result.Collection.toFixed(2),
+result.Fixed.toFixed(2),
+GSTonFees.toFixed(2),
+result.TDS.toFixed(2),
+result.TCS.toFixed(2),
+result.BankSettlement.toFixed(2),
+result.InputGSTCredit.toFixed(2),
+result.IncomeTaxCredit.toFixed(2),
+result.EffectiveNet.toFixed(2)
+].join(","));
+
 });
 
 let blob = new Blob([csv.join("\n")], { type: "text/csv" });
 let url = URL.createObjectURL(blob);
 let a = document.createElement("a");
 a.href = url;
-a.download = "flipkart_pricing_report.csv";
+a.download = "flipkart_pricing_full_export.csv";
 a.click();
 }
