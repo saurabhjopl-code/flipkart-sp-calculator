@@ -1,31 +1,22 @@
-export function calculateMyntra(articleType, TP, brand, tables) {
+export function calculateMyntra(row, data) {
 
-  const commissionTable = tables.myntraCommission || [];
-  const fixedTable = tables.myntraFixed || [];
-  const levelMap = tables.myntraLevelMap || [];
-  const gtaTable = tables.myntraGTA || [];
+  const article = row.cat;
+  const brand = row.brand;
+  const TP = row.simTP;
 
-  function getLevel(articleType) {
-    const row = levelMap.find(r => r["Article Type"] === articleType);
-    return row ? row.Levels : null;
-  }
+  const commissionTable =
+    (data.commissionData[brand] &&
+      data.commissionData[brand][article]) || [];
 
-  function getGTA(level, price) {
-    const slab = gtaTable.find(r =>
-      r.Levels === level &&
-      price >= Number(r["Lower Limit"]) &&
-      price <= Number(r["Upper Limit"])
-    );
-    return slab ? Number(slab.Charges) : 0;
-  }
+  const fixedTable =
+    (data.fixedData[brand] &&
+      data.fixedData[brand][article]) || [];
 
-  function findSlab(table, brand, articleType, price) {
-    return table.find(r =>
-      r.Brand === brand &&
-      r["Article Type"] === articleType &&
-      price >= Number(r["Lower Limit"]) &&
-      price <= Number(r["Upper Limit"])
-    );
+  const level = data.levelMap[article];
+  const gtaTable = level ? data.gtaData[level] || [] : [];
+
+  function findSlab(table, price) {
+    return table.find(s => price >= s.min && price <= s.max);
   }
 
   let SP = TP;
@@ -33,18 +24,18 @@ export function calculateMyntra(articleType, TP, brand, tables) {
   let Commission = 0;
   let Fixed = 0;
 
-  const level = getLevel(articleType);
-
   for (let i = 0; i < 20; i++) {
 
-    GTA = getGTA(level, SP);
+    const gtaSlab = findSlab(gtaTable, SP);
+    GTA = gtaSlab ? gtaSlab.fee : 0;
+
     const sellerPrice = SP - GTA;
 
-    const commSlab = findSlab(commissionTable, brand, articleType, sellerPrice);
-    const fixedSlab = findSlab(fixedTable, brand, articleType, sellerPrice);
+    const commSlab = findSlab(commissionTable, sellerPrice);
+    const fixedSlab = findSlab(fixedTable, sellerPrice);
 
-    Commission = commSlab ? sellerPrice * (parseFloat(commSlab.Commission) / 100) : 0;
-    Fixed = fixedSlab ? Number(fixedSlab.FEE) : 0;
+    Commission = commSlab ? sellerPrice * (commSlab.rate / 100) : 0;
+    Fixed = fixedSlab ? fixedSlab.fee : 0;
 
     const GST = 0.18 * (Commission + Fixed);
     const TDS = sellerPrice * 0.01;
