@@ -1,6 +1,7 @@
 import { calculateSP } from "./engineRouter.js";
 
-let allData = [];
+let masterData = {};
+let allSKU = [];
 let filteredData = [];
 let visibleCount = 50;
 let activeMP = "FLIPKART";
@@ -8,7 +9,9 @@ let activeMP = "FLIPKART";
 /* ================= INIT ================= */
 
 export function initUI(data) {
-  allData = data;
+
+  masterData = data;
+  allSKU = data.skuData;
 
   setupTabs();
   setupSearchClear();
@@ -31,6 +34,7 @@ export function initUI(data) {
 /* ================= TABS ================= */
 
 function setupTabs() {
+
   const fkBtn = document.getElementById("flipkartTab");
   const myBtn = document.getElementById("myntraTab");
 
@@ -54,6 +58,7 @@ function setupTabs() {
 /* ================= SEARCH CLEAR ================= */
 
 function setupSearchClear() {
+
   const input = document.getElementById("searchInput");
   const clearBtn = document.getElementById("clearSearch");
 
@@ -71,12 +76,13 @@ function setupSearchClear() {
 /* ================= CATEGORY ================= */
 
 function populateCategoryFilter() {
+
   const select = document.getElementById("categoryFilter");
   select.innerHTML = `<option value="all">All Categories</option>`;
 
   const categories = [
     ...new Set(
-      allData
+      allSKU
         .filter(d => d.mp === activeMP)
         .map(d => d.cat)
     )
@@ -95,10 +101,11 @@ function populateCategoryFilter() {
 /* ================= FILTER ================= */
 
 function applyFilters() {
+
   const search = document.getElementById("searchInput").value.toLowerCase();
   const category = document.getElementById("categoryFilter").value;
 
-  filteredData = allData.filter(row =>
+  filteredData = allSKU.filter(row =>
     row.mp === activeMP &&
     row.sku.toLowerCase().includes(search) &&
     (category === "all" || row.cat === category)
@@ -122,37 +129,38 @@ function formatCurrency(num) {
 }
 
 function renderTable() {
+
   const body = document.getElementById("tableBody");
   body.innerHTML = "";
 
   filteredData.slice(0, visibleCount).forEach(row => {
 
-    const result = calculateSP(row, data);
+    const result = calculateSP(row, masterData);
 
     const GSTonFees =
-      (result.CommissionGST || 0) +
-      (result.CollectionGST || 0) +
-      (result.FixedGST || 0);
+      0.18 * ((result.Commission || 0) +
+              (result.Collection || 0) +
+              (result.Fixed || 0));
 
     const tr = document.createElement("tr");
 
     tr.innerHTML =
-  "<td>" + row.sku + "</td>" +
-  "<td>" + row.cat + "</td>" +
-  "<td>" + (row.brand || "-") + "</td>" +
-  "<td>" + formatCurrency(row.simTP) + "</td>" +
-  "<td>" + formatCurrency(result.SP) + "</td>" +
-  "<td>" + formatCurrency(result.GTA) + "</td>" +
-  "<td>" + formatCurrency(result.Commission) + "</td>" +
-  "<td>" + formatCurrency(result.Collection) + "</td>" +
-  "<td>" + formatCurrency(result.Fixed) + "</td>" +
-  "<td>" + formatCurrency(GSTonFees) + "</td>" +
-  "<td>" + formatCurrency(result.TDS) + "</td>" +
-  "<td>" + formatCurrency(result.TCS) + "</td>" +
-  "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
-  "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
-  "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
-  "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
+      "<td>" + row.sku + "</td>" +
+      "<td>" + row.cat + "</td>" +
+      "<td>" + (row.brand || "-") + "</td>" +
+      "<td>" + formatCurrency(row.simTP) + "</td>" +
+      "<td>" + formatCurrency(result.SP) + "</td>" +
+      "<td>" + formatCurrency(result.GTA) + "</td>" +
+      "<td>" + formatCurrency(result.Commission) + "</td>" +
+      "<td>" + formatCurrency(result.Collection) + "</td>" +
+      "<td>" + formatCurrency(result.Fixed) + "</td>" +
+      "<td>" + formatCurrency(GSTonFees) + "</td>" +
+      "<td>" + formatCurrency(result.TDS) + "</td>" +
+      "<td>" + formatCurrency(result.TCS) + "</td>" +
+      "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
+      "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
+      "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
+      "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
 
     body.appendChild(tr);
   });
@@ -161,6 +169,7 @@ function renderTable() {
 /* ================= SUMMARY ================= */
 
 function updateSummary() {
+
   document.getElementById("summaryBar").innerText =
     activeMP +
     " | Total: " +
@@ -172,6 +181,7 @@ function updateSummary() {
 /* ================= EXPORT ================= */
 
 function exportFullData() {
+
   if (!filteredData.length) return;
 
   let csv = [];
@@ -179,8 +189,10 @@ function exportFullData() {
   csv.push([
     "SKU",
     "Category",
+    "Brand",
     "TP",
     "SP",
+    "GTA",
     "Commission",
     "Collection",
     "Fixed Fee",
@@ -195,23 +207,20 @@ function exportFullData() {
 
   filteredData.forEach(row => {
 
-    const result = calculateSP(
-      row.cat,
-      row.simTP,
-      row.mp,
-      row.brand
-    );
+    const result = calculateSP(row, masterData);
 
     const GSTonFees =
-      (result.CommissionGST || 0) +
-      (result.CollectionGST || 0) +
-      (result.FixedGST || 0);
+      0.18 * ((result.Commission || 0) +
+              (result.Collection || 0) +
+              (result.Fixed || 0));
 
     csv.push([
       row.sku,
       row.cat,
+      row.brand || "",
       row.simTP,
       result.SP,
+      result.GTA,
       result.Commission,
       result.Collection,
       result.Fixed,
