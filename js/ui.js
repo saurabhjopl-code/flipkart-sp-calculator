@@ -9,15 +9,11 @@ allData = data;
 populateCategoryFilter();
 applyFilters();
 
-document.getElementById("searchInput").addEventListener("input", applyFilters);
+document.getElementById("searchInput").addEventListener("input", handleSearch);
 document.getElementById("categoryFilter").addEventListener("change", applyFilters);
-
-document.getElementById("loadMoreBtn").addEventListener("click", ()=>{
-visibleCount += 50;
-renderTable();
-});
-
-document.getElementById("exportBtn").addEventListener("click", exportCSV);
+document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
+document.getElementById("exportBtn").addEventListener("click", exportTable);
+document.getElementById("clearSearch").addEventListener("click", clearSearch);
 }
 
 function populateCategoryFilter(){
@@ -31,6 +27,18 @@ select.appendChild(opt);
 });
 }
 
+function handleSearch(e){
+let clearBtn = document.getElementById("clearSearch");
+clearBtn.style.display = e.target.value ? "block" : "none";
+applyFilters();
+}
+
+function clearSearch(){
+document.getElementById("searchInput").value = "";
+document.getElementById("clearSearch").style.display = "none";
+applyFilters();
+}
+
 function applyFilters(){
 let search = document.getElementById("searchInput").value.toLowerCase();
 let category = document.getElementById("categoryFilter").value;
@@ -42,21 +50,21 @@ return row.sku.toLowerCase().includes(search) &&
 
 visibleCount = 50;
 renderTable();
+updateSummary();
+}
+
+function loadMore(){
+visibleCount += 50;
+renderTable();
+updateSummary();
 }
 
 function renderTable(){
 let body = document.getElementById("tableBody");
 body.innerHTML = "";
 
-let safe = 0;
-let totalSP = 0;
-
 filteredData.slice(0, visibleCount).forEach(row=>{
-
 let result = calculateSP(row.cat, row.simTP);
-
-if(result.EffectiveNet >= row.simTP) safe++;
-totalSP += result.SP;
 
 let GSTonFees =
 result.CommissionGST +
@@ -85,29 +93,35 @@ tr.innerHTML = `
 
 body.appendChild(tr);
 });
-
-document.getElementById("summaryBar").innerText =
-`Total: ${filteredData.length} | Safe: ${safe} | Avg SP: ${filteredData.length?Math.round(totalSP/filteredData.length):0}`;
 }
 
-function exportCSV(){
-let csv="SKU,Category,TP,SP,Commission,Collection,Fixed,GST on Fees,TDS,TCS,Bank Settlement,Input GST Credit,Income Tax Credit,Effective Net\n";
+function updateSummary(){
+let total = filteredData.length;
+let showing = Math.min(visibleCount, total);
 
-filteredData.forEach(r=>{
-let result = calculateSP(r.cat, r.simTP);
+document.getElementById("summaryBar").innerText =
+`Total: ${total} | Showing: ${showing}`;
+}
 
-let GSTonFees =
-result.CommissionGST +
-result.CollectionGST +
-result.FixedGST;
+function exportTable(){
+let table = document.querySelector(".pricing-table");
+let rows = table.querySelectorAll("tr");
 
-csv+=`${r.sku},${r.cat},${r.simTP},${result.SP},${result.Commission},${result.Collection},${result.Fixed},${GSTonFees},${result.TDS},${result.TCS},${result.BankSettlement},${result.InputGSTCredit},${result.IncomeTaxCredit},${result.EffectiveNet}\n`;
+let csv = [];
+
+rows.forEach(row=>{
+let cols = row.querySelectorAll("th, td");
+let rowData = [];
+cols.forEach(col=>{
+rowData.push(col.innerText.replace(/,/g, ""));
+});
+csv.push(rowData.join(","));
 });
 
-let blob=new Blob([csv],{type:"text/csv"});
-let url=URL.createObjectURL(blob);
-let a=document.createElement("a");
-a.href=url;
-a.download="pricing_export.csv";
+let blob = new Blob([csv.join("\n")], { type: "text/csv" });
+let url = URL.createObjectURL(blob);
+let a = document.createElement("a");
+a.href = url;
+a.download = "flipkart_pricing_report.csv";
 a.click();
 }
