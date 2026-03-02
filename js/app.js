@@ -6,6 +6,7 @@ let visibleCount = 50;
 
 // ---------- CATEGORY NORMALIZER ----------
 function normalizeCategory(cat){
+if(!cat) return null;
 cat = cat.toLowerCase().trim();
 if(cat==="dress") return "Dress";
 if(cat==="ethnic_set") return "Ethnic Sets";
@@ -36,13 +37,53 @@ const collectionTable = [
 ];
 
 const gtaTable = {
-"Dress":[{min:0,max:300,fee:84},{min:300,max:500,fee:86},{min:500,max:1000,fee:122},{min:1000,max:999999,fee:168}],
-"Ethnic Sets":[{min:0,max:300,fee:74},{min:300,max:500,fee:79},{min:500,max:1000,fee:123},{min:1000,max:999999,fee:146}],
-"Salwar Kurta Dupatta":[{min:0,max:300,fee:75},{min:300,max:500,fee:77},{min:500,max:1000,fee:119},{min:1000,max:999999,fee:139}]
+"Dress":[
+{min:0,max:300,fee:84},
+{min:300,max:500,fee:86},
+{min:500,max:1000,fee:122},
+{min:1000,max:999999,fee:168}
+],
+"Ethnic Sets":[
+{min:0,max:300,fee:74},
+{min:300,max:500,fee:79},
+{min:500,max:1000,fee:123},
+{min:1000,max:999999,fee:146}
+],
+"Salwar Kurta Dupatta":[
+{min:0,max:300,fee:75},
+{min:300,max:500,fee:77},
+{min:500,max:1000,fee:119},
+{min:1000,max:999999,fee:139}
+],
+"Kurta":[
+{min:0,max:300,fee:70},
+{min:300,max:500,fee:77},
+{min:500,max:1000,fee:136},
+{min:1000,max:999999,fee:219}
+],
+"Tops":[
+{min:0,max:300,fee:73},
+{min:300,max:500,fee:88},
+{min:500,max:1000,fee:130},
+{min:1000,max:999999,fee:186}
+],
+"Fabric":[
+{min:0,max:300,fee:75},
+{min:300,max:500,fee:78},
+{min:500,max:1000,fee:157},
+{min:1000,max:999999,fee:232}
+],
+"Sari":[
+{min:0,max:300,fee:68},
+{min:300,max:500,fee:80},
+{min:500,max:1000,fee:157},
+{min:1000,max:999999,fee:254}
+]
 };
 
-// ---------- ENGINE ----------
+// ---------- SAFE SLAB FETCH ----------
 function getSlabValue(table, category, value){
+if(!table[category]) return 0;
 for(let slab of table[category]){
 if(value>=slab.min && value<=slab.max) return slab.fee;
 }
@@ -56,43 +97,64 @@ if(value>=slab.min && value<=slab.max) return slab.fee;
 return 0;
 }
 
+// ---------- CORE ENGINE ----------
 function calculateSP(category, TP){
+if(!category || !TP || TP<=0) return {SP:0, settlement:0};
+
 let SP = TP + 300;
-for(let i=0;i<15;i++){
+
+for(let i=0;i<20;i++){
 let gta = getSlabValue(gtaTable, category, SP);
 let sellerPrice = SP - gta;
 let commission = getSlabValue(commissionTable, category, sellerPrice);
 let collection = getCollection(sellerPrice);
-let newSellerPrice = (TP + 5) / (1 - commission - collection);
+
+let denominator = (1 - commission - collection);
+if(denominator<=0) break;
+
+let newSellerPrice = (TP + 5) / denominator;
 let newSP = Math.ceil(newSellerPrice + gta);
+
 if(Math.abs(newSP - SP) < 1) break;
 SP = newSP;
 }
+
 let gta = getSlabValue(gtaTable, category, SP);
 let sellerPrice = SP - gta;
 let commission = getSlabValue(commissionTable, category, sellerPrice);
 let collection = getCollection(sellerPrice);
 let settlement = sellerPrice*(1-commission-collection)-5;
+
 return {SP,settlement};
 }
 
 // ---------- LOAD DATA ----------
 async function loadData(){
+try{
 const res = await fetch(SHEET_URL);
 const text = await res.text();
 parseCSV(text);
+}catch(e){
+console.error("Sheet load failed:",e);
+}
 }
 
 function parseCSV(text){
+allData=[];
 let rows = text.split("\n").map(r=>r.split(","));
 let categories = new Set();
+
 for(let i=1;i<rows.length;i++){
-let sku=rows[i][0];
-let cat=normalizeCategory(rows[i][1]);
-let TP=parseFloat(rows[i][2]);
-if(!sku||!cat||!TP) continue;
-let result=calculateSP(cat,TP);
+let sku = rows[i][0]?.trim();
+let cat = normalizeCategory(rows[i][1]);
+let TP = parseFloat(rows[i][2]);
+
+if(!sku || !cat || isNaN(TP)) continue;
+
+let result = calculateSP(cat,TP);
+
 allData.push({
+id:i,
 sku,
 cat,
 originalTP:TP,
@@ -101,16 +163,20 @@ originalSP:result.SP,
 SP:result.SP,
 settlement:result.settlement
 });
+
 categories.add(cat);
 }
+
 populateCategoryFilter(categories);
 applyFilters();
+
 document.getElementById("progressBar").style.width="100%";
 document.getElementById("progressText").innerText="Loaded";
 }
 
 function populateCategoryFilter(categories){
 let select=document.getElementById("categoryFilter");
+select.innerHTML='<option value="all">All Categories</option>';
 categories.forEach(cat=>{
 let opt=document.createElement("option");
 opt.value=cat;
@@ -119,40 +185,46 @@ select.appendChild(opt);
 });
 }
 
+// ---------- FILTER ----------
 function applyFilters(){
 let search=document.getElementById("searchInput").value.toLowerCase();
 let category=document.getElementById("categoryFilter").value;
+
 filteredData=allData.filter(row=>{
 let matchSKU=row.sku.toLowerCase().includes(search);
 let matchCat=(category==="all"||row.cat===category);
 return matchSKU && matchCat;
 });
+
 visibleCount=50;
 renderTable();
 }
 
+// ---------- RENDER ----------
 function renderTable(){
 let body=document.getElementById("tableBody");
 body.innerHTML="";
 let safeCount=0;
 let totalSP=0;
 
-filteredData.slice(0,visibleCount).forEach((row,index)=>{
-let tr=document.createElement("tr");
-if(row.settlement>=row.simTP){tr.className="safe";safeCount++;}
-else tr.className="unsafe";
+filteredData.slice(0,visibleCount).forEach(row=>{
+
+if(row.settlement>=row.simTP) safeCount++;
 totalSP+=row.SP;
+
+let tr=document.createElement("tr");
+tr.className = row.settlement>=row.simTP ? "safe" : "unsafe";
 
 tr.innerHTML=`
 <td>${row.sku}</td>
 <td>${row.cat}</td>
 <td>${row.originalTP}</td>
-<td><input type="number" value="${row.simTP}" 
-onchange="simulate(${index},this.value)" style="width:80px"></td>
+<td><input type="number" value="${row.simTP}" data-id="${row.id}" class="sim-input" style="width:80px"></td>
 <td>${row.SP}</td>
 <td>${row.settlement.toFixed(2)}</td>
 <td>${row.SP-row.originalSP}</td>
 `;
+
 body.appendChild(tr);
 });
 
@@ -160,22 +232,31 @@ document.getElementById("summaryBar").innerText=
 `Total: ${filteredData.length} | Safe: ${safeCount} | Avg SP: ${filteredData.length?Math.round(totalSP/filteredData.length):0}`;
 }
 
-function simulate(index,value){
-let row=filteredData[index];
-row.simTP=parseFloat(value);
-let result=calculateSP(row.cat,row.simTP);
+// ---------- SIMULATION ----------
+document.addEventListener("input",function(e){
+if(e.target.classList.contains("sim-input")){
+let id=parseInt(e.target.getAttribute("data-id"));
+let value=parseFloat(e.target.value);
+
+let row=allData.find(r=>r.id===id);
+if(!row || isNaN(value)) return;
+
+row.simTP=value;
+let result=calculateSP(row.cat,value);
 row.SP=result.SP;
 row.settlement=result.settlement;
-renderTable();
-}
 
-document.getElementById("searchInput").addEventListener("input",applyFilters);
-document.getElementById("categoryFilter").addEventListener("change",applyFilters);
+applyFilters();
+}
+});
+
+// ---------- LOAD MORE ----------
 document.getElementById("loadMoreBtn").addEventListener("click",()=>{
 visibleCount+=50;
 renderTable();
 });
 
+// ---------- EXPORT ----------
 document.getElementById("exportBtn").addEventListener("click",()=>{
 let csv="SKU,Category,Original TP,Sim TP,SP,Settlement\n";
 filteredData.forEach(r=>{
@@ -189,4 +270,5 @@ a.download="simulation_export.csv";
 a.click();
 });
 
+// ---------- INIT ----------
 loadData();
