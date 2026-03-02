@@ -11,23 +11,24 @@ export function initUI(data) {
   allData = data;
 
   setupTabs();
+  setupSearchClear();
   populateCategoryFilter();
   applyFilters();
 
-  document
-    .getElementById("searchInput")
+  document.getElementById("searchInput")
     .addEventListener("input", applyFilters);
 
-  document
-    .getElementById("categoryFilter")
+  document.getElementById("categoryFilter")
     .addEventListener("change", applyFilters);
 
-  document
-    .getElementById("loadMoreBtn")
+  document.getElementById("loadMoreBtn")
     .addEventListener("click", loadMore);
+
+  document.getElementById("exportBtn")
+    .addEventListener("click", exportFullData);
 }
 
-/* ================= TAB SWITCH ================= */
+/* ================= TABS ================= */
 
 function setupTabs() {
   const fkBtn = document.getElementById("flipkartTab");
@@ -50,6 +51,23 @@ function setupTabs() {
   };
 }
 
+/* ================= SEARCH CLEAR ================= */
+
+function setupSearchClear() {
+  const input = document.getElementById("searchInput");
+  const clearBtn = document.getElementById("clearSearch");
+
+  input.addEventListener("input", () => {
+    clearBtn.style.display = input.value ? "block" : "none";
+  });
+
+  clearBtn.addEventListener("click", () => {
+    input.value = "";
+    clearBtn.style.display = "none";
+    applyFilters();
+  });
+}
+
 /* ================= CATEGORY ================= */
 
 function populateCategoryFilter() {
@@ -59,14 +77,14 @@ function populateCategoryFilter() {
   const categories = [
     ...new Set(
       allData
-        .filter((d) => d.mp === activeMP)
-        .map((d) => d.cat)
-    ),
+        .filter(d => d.mp === activeMP)
+        .map(d => d.cat)
+    )
   ];
 
   categories.sort();
 
-  categories.forEach((cat) => {
+  categories.forEach(cat => {
     const opt = document.createElement("option");
     opt.value = cat;
     opt.textContent = cat;
@@ -74,23 +92,17 @@ function populateCategoryFilter() {
   });
 }
 
-/* ================= FILTERING ================= */
+/* ================= FILTER ================= */
 
 function applyFilters() {
-  const search = document
-    .getElementById("searchInput")
-    .value.toLowerCase();
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const category = document.getElementById("categoryFilter").value;
 
-  const category =
-    document.getElementById("categoryFilter").value;
-
-  filteredData = allData.filter((row) => {
-    return (
-      row.mp === activeMP &&
-      row.sku.toLowerCase().includes(search) &&
-      (category === "all" || row.cat === category)
-    );
-  });
+  filteredData = allData.filter(row =>
+    row.mp === activeMP &&
+    row.sku.toLowerCase().includes(search) &&
+    (category === "all" || row.cat === category)
+  );
 
   visibleCount = 50;
 
@@ -113,41 +125,40 @@ function renderTable() {
   const body = document.getElementById("tableBody");
   body.innerHTML = "";
 
-  filteredData
-    .slice(0, visibleCount)
-    .forEach((row) => {
-      const result = calculateSP(
-        row.cat,
-        row.simTP,
-        row.mp,
-        row.brand
-      );
+  filteredData.slice(0, visibleCount).forEach(row => {
 
-      const GSTonFees =
-        (result.CommissionGST || 0) +
-        (result.CollectionGST || 0) +
-        (result.FixedGST || 0);
+    const result = calculateSP(
+      row.cat,
+      row.simTP,
+      row.mp,
+      row.brand
+    );
 
-      const tr = document.createElement("tr");
+    const GSTonFees =
+      (result.CommissionGST || 0) +
+      (result.CollectionGST || 0) +
+      (result.FixedGST || 0);
 
-      tr.innerHTML =
-        "<td>" + row.sku + "</td>" +
-        "<td>" + row.cat + "</td>" +
-        "<td>" + formatCurrency(row.simTP) + "</td>" +
-        "<td>" + formatCurrency(result.SP) + "</td>" +
-        "<td>" + formatCurrency(result.Commission) + "</td>" +
-        "<td>" + formatCurrency(result.Collection) + "</td>" +
-        "<td>" + formatCurrency(result.Fixed) + "</td>" +
-        "<td>" + formatCurrency(GSTonFees) + "</td>" +
-        "<td>" + formatCurrency(result.TDS) + "</td>" +
-        "<td>" + formatCurrency(result.TCS) + "</td>" +
-        "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
-        "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
-        "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
-        "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
+    const tr = document.createElement("tr");
 
-      body.appendChild(tr);
-    });
+    tr.innerHTML =
+      "<td>" + row.sku + "</td>" +
+      "<td>" + row.cat + "</td>" +
+      "<td>" + formatCurrency(row.simTP) + "</td>" +
+      "<td>" + formatCurrency(result.SP) + "</td>" +
+      "<td>" + formatCurrency(result.Commission) + "</td>" +
+      "<td>" + formatCurrency(result.Collection) + "</td>" +
+      "<td>" + formatCurrency(result.Fixed) + "</td>" +
+      "<td>" + formatCurrency(GSTonFees) + "</td>" +
+      "<td>" + formatCurrency(result.TDS) + "</td>" +
+      "<td>" + formatCurrency(result.TCS) + "</td>" +
+      "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
+      "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
+      "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
+      "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
+
+    body.appendChild(tr);
+  });
 }
 
 /* ================= SUMMARY ================= */
@@ -161,16 +172,67 @@ function updateSummary() {
     Math.min(visibleCount, filteredData.length);
 }
 
-/* ================= SEARCH ================= */
-const searchInput = document.getElementById("searchInput");
-const clearBtn = document.getElementById("clearSearch");
+/* ================= EXPORT ================= */
 
-searchInput.addEventListener("input", () => {
-  clearBtn.style.display = searchInput.value ? "block" : "none";
-});
+function exportFullData() {
+  if (!filteredData.length) return;
 
-clearBtn.addEventListener("click", () => {
-  searchInput.value = "";
-  clearBtn.style.display = "none";
-  applyFilters();
-});
+  let csv = [];
+
+  csv.push([
+    "SKU",
+    "Category",
+    "TP",
+    "SP",
+    "Commission",
+    "Collection",
+    "Fixed Fee",
+    "GST on Fees",
+    "TDS",
+    "TCS",
+    "Bank Settlement",
+    "Input GST Credit",
+    "Income Tax Credit",
+    "Effective Net"
+  ].join(","));
+
+  filteredData.forEach(row => {
+
+    const result = calculateSP(
+      row.cat,
+      row.simTP,
+      row.mp,
+      row.brand
+    );
+
+    const GSTonFees =
+      (result.CommissionGST || 0) +
+      (result.CollectionGST || 0) +
+      (result.FixedGST || 0);
+
+    csv.push([
+      row.sku,
+      row.cat,
+      row.simTP,
+      result.SP,
+      result.Commission,
+      result.Collection,
+      result.Fixed,
+      GSTonFees,
+      result.TDS,
+      result.TCS,
+      result.BankSettlement,
+      result.InputGSTCredit,
+      result.IncomeTaxCredit,
+      result.EffectiveNet
+    ].join(","));
+  });
+
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = activeMP + "_pricing_export.csv";
+  a.click();
+}
