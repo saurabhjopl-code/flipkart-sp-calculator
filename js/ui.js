@@ -160,3 +160,17 @@ function updateSummary() {
     " | Showing: " +
     Math.min(visibleCount, filteredData.length);
 }
+
+/* ================= SEARCH ================= */
+const searchInput = document.getElementById("searchInput");
+const clearBtn = document.getElementById("clearSearch");
+
+searchInput.addEventListener("input", () => {
+  clearBtn.style.display = searchInput.value ? "block" : "none";
+});
+
+clearBtn.addEventListener("click", () => {
+  searchInput.value = "";
+  clearBtn.style.display = "none";
+  applyFilters();
+});
