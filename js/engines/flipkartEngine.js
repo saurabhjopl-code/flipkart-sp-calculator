@@ -1,33 +1,26 @@
-let commissionTable = [];
-let fixedTable = [];
-let collectionTable = [];
-let gtaTable = [];
+export function calculateFlipkart(category, TP, tables) {
 
-export function initFlipkartTables(data) {
-  commissionTable = data.fkCommission || [];
-  fixedTable = data.fkFixed || [];
-  collectionTable = data.fkCollection || [];
-  gtaTable = data.fkGTA || [];
-}
+  const commissionTable = tables.fkCommission || [];
+  const fixedTable = tables.fkFixed || [];
+  const collectionTable = tables.fkCollection || [];
+  const gtaTable = tables.fkGTA || [];
 
-function findSlab(table, category, price) {
-  return table.find(r =>
-    r.category === category &&
-    price >= Number(r["lower limit"]) &&
-    price <= Number(r["upper limit"])
-  );
-}
+  function findSlab(table, category, price) {
+    return table.find(r =>
+      r.category === category &&
+      price >= Number(r["lower limit"]) &&
+      price <= Number(r["upper limit"])
+    );
+  }
 
-function getGTA(category, price) {
-  const slab = gtaTable.find(r =>
-    r.Category === category &&
-    price >= Number(r["lower limit"]) &&
-    price <= Number(r["upper limit"])
-  );
-  return slab ? Number(slab.fees) : 0;
-}
-
-export function calculateFlipkart(category, TP) {
+  function getGTA(category, price) {
+    const slab = gtaTable.find(r =>
+      r.Category === category &&
+      price >= Number(r["lower limit"]) &&
+      price <= Number(r["upper limit"])
+    );
+    return slab ? Number(slab.fees) : 0;
+  }
 
   let SP = TP;
   let GTA = 0;
@@ -60,7 +53,8 @@ export function calculateFlipkart(category, TP) {
       GST -
       TDS -
       TCS +
-      (GST + TCS) +
+      GST +
+      TCS +
       TDS;
 
     SP += (TP - Net);
@@ -77,9 +71,6 @@ export function calculateFlipkart(category, TP) {
     Commission,
     Collection,
     Fixed,
-    CommissionGST: Commission * 0.18,
-    CollectionGST: Collection * 0.18,
-    FixedGST: Fixed * 0.18,
     TDS,
     TCS,
     BankSettlement: sellerPrice - Commission - Fixed - Collection - GST - TDS - TCS,
