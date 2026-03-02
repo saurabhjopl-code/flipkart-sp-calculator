@@ -11,6 +11,23 @@ function formatCurrency(value){
   });
 }
 
+function buildProductURL(row){
+
+  if(!row.fsn) return null;
+
+  if(row.mp === "MYNTRA"){
+    return `https://www.myntra.com/${row.fsn}`;
+  }
+
+  // Default → Flipkart & Shopsy
+  return `https://www.flipkart.com/product/p/itme?pid=${row.fsn}`;
+}
+
+function buildTooltip(row){
+  if(row.mp === "MYNTRA") return "Open on Myntra";
+  return "Open on Flipkart";
+}
+
 export function initUI(data){
   allData = data;
   populateCategoryFilter();
@@ -72,6 +89,7 @@ function renderTable(){
   body.innerHTML = "";
 
   filteredData.slice(0, visibleCount).forEach(row=>{
+
     let result = calculateSP(row.cat, row.simTP);
 
     let GSTonFees =
@@ -79,12 +97,20 @@ function renderTable(){
       result.CollectionGST +
       result.FixedGST;
 
-    let productURL = row.fsn
-      ? `https://www.flipkart.com/product/p/itme?pid=${row.fsn}`
-      : null;
+    let productURL = buildProductURL(row);
+    let tooltip = buildTooltip(row);
 
     let skuCell = productURL
-      ? `<a href="${productURL}" target="_blank" class="sku-link">${row.sku}</a>`
+      ? `
+        <div class="sku-cell">
+          <span>${row.sku}</span>
+          <a href="${productURL}" target="_blank" 
+             class="sku-link-icon"
+             title="${tooltip}">
+             🔗
+          </a>
+        </div>
+      `
       : row.sku;
 
     let tr = document.createElement("tr");
@@ -118,6 +144,8 @@ function updateSummary(){
   document.getElementById("summaryBar").innerText =
     `Total: ${total} | Showing: ${showing}`;
 }
+
+/* ---------------- EXPORT FULL FILTERED DATA ---------------- */
 
 function exportFullData(){
 
@@ -170,6 +198,6 @@ function exportFullData(){
   let url = URL.createObjectURL(blob);
   let a = document.createElement("a");
   a.href = url;
-  a.download = "flipkart_pricing_full_export.csv";
+  a.download = "pricing_full_export.csv";
   a.click();
 }
