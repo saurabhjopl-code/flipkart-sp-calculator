@@ -18,11 +18,6 @@
   <button id="exportBtn">Export CSV</button>
 </header>
 
-<div class="progress-container">
-  <div id="progressBar"></div>
-</div>
-<div id="progressText" class="progress-text">Loading...</div>
-
 <div class="filter-bar">
   <input type="text" id="searchInput" placeholder="Search SKU / Partial SKU">
   <select id="categoryFilter">
@@ -35,16 +30,14 @@
 </div>
 
 <div class="table-container">
-  <table>
+  <table class="pricing-table">
     <thead>
       <tr>
+        <th style="width:40px;"></th>
         <th>SKU</th>
-        <th>Category</th>
         <th>TP</th>
-        <th>Sim TP</th>
         <th>SP</th>
-        <th>Settlement</th>
-        <th>Δ SP</th>
+        <th>Effective Net</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
