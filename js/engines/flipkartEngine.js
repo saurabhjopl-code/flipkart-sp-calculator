@@ -1,25 +1,20 @@
-export function calculateFlipkart(category, TP, tables) {
+export function calculateFlipkart(row, data) {
 
-  const commissionTable = tables.fkCommission || [];
-  const fixedTable = tables.fkFixed || [];
-  const collectionTable = tables.fkCollection || [];
-  const gtaTable = tables.fkGTA || [];
+  const category = row.cat;
+  const TP = row.simTP;
 
-  function findSlab(table, category, price) {
-    return table.find(r =>
-      r.category === category &&
-      price >= Number(r["lower limit"]) &&
-      price <= Number(r["upper limit"])
-    );
+  const commissionTable = data.fkCommission[category] || [];
+  const fixedTable = data.fkFixed[category] || [];
+  const collectionTable = data.fkCollection[category] || [];
+  const gtaTable = data.fkGTA[category] || [];
+
+  function findSlab(table, price) {
+    return table.find(s => price >= s.min && price <= s.max);
   }
 
-  function getGTA(category, price) {
-    const slab = gtaTable.find(r =>
-      r.Category === category &&
-      price >= Number(r["lower limit"]) &&
-      price <= Number(r["upper limit"])
-    );
-    return slab ? Number(slab.fees) : 0;
+  function getGTA(price) {
+    const slab = findSlab(gtaTable, price);
+    return slab ? slab.fee : 0;
   }
 
   let SP = TP;
@@ -30,16 +25,16 @@ export function calculateFlipkart(category, TP, tables) {
 
   for (let i = 0; i < 20; i++) {
 
-    GTA = getGTA(category, SP);
+    GTA = getGTA(SP);
     const sellerPrice = SP - GTA;
 
-    const commSlab = findSlab(commissionTable, category, sellerPrice);
-    const fixedSlab = findSlab(fixedTable, category, sellerPrice);
-    const collSlab = findSlab(collectionTable, category, sellerPrice);
+    const commSlab = findSlab(commissionTable, sellerPrice);
+    const fixedSlab = findSlab(fixedTable, sellerPrice);
+    const collSlab = findSlab(collectionTable, sellerPrice);
 
-    Commission = commSlab ? sellerPrice * (parseFloat(commSlab.fee) / 100) : 0;
-    Fixed = fixedSlab ? Number(fixedSlab.fee) : 0;
-    Collection = collSlab ? sellerPrice * (parseFloat(collSlab.fee) / 100) : 0;
+    Commission = commSlab ? sellerPrice * (commSlab.rate / 100) : 0;
+    Fixed = fixedSlab ? fixedSlab.fee : 0;
+    Collection = collSlab ? sellerPrice * (collSlab.rate / 100) : 0;
 
     const GST = 0.18 * (Commission + Fixed + Collection);
     const TDS = sellerPrice * 0.01;
