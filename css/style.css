@@ -149,3 +149,13 @@ body {
   color: white;
   padding: 8px 16px;
 }
+/* ---------------- HYPERLINK ---------------- */
+.sku-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sku-link:hover {
+  text-decoration: underline;
+}
