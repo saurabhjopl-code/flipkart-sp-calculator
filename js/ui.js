@@ -4,16 +4,12 @@ let allData = [];
 let filteredData = [];
 let visibleCount = 50;
 
-/* -------- Currency Formatter -------- */
-
 function formatCurrency(value){
   return "₹" + Number(value).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 }
-
-/* ---------------- INIT ---------------- */
 
 export function initUI(data){
   allData = data;
@@ -26,8 +22,6 @@ export function initUI(data){
   document.getElementById("exportBtn").addEventListener("click", exportFullData);
   document.getElementById("clearSearch").addEventListener("click", clearSearch);
 }
-
-/* ---------------- FILTER ---------------- */
 
 function populateCategoryFilter(){
   let select = document.getElementById("categoryFilter");
@@ -73,8 +67,6 @@ function loadMore(){
   updateSummary();
 }
 
-/* ---------------- TABLE ---------------- */
-
 function renderTable(){
   let body = document.getElementById("tableBody");
   body.innerHTML = "";
@@ -87,11 +79,19 @@ function renderTable(){
       result.CollectionGST +
       result.FixedGST;
 
+    let productURL = row.fsn
+      ? `https://www.flipkart.com/product/p/itme?pid=${row.fsn}`
+      : null;
+
+    let skuCell = productURL
+      ? `<a href="${productURL}" target="_blank" class="sku-link">${row.sku}</a>`
+      : row.sku;
+
     let tr = document.createElement("tr");
     tr.className = result.EffectiveNet >= row.simTP ? "safe" : "unsafe";
 
     tr.innerHTML = `
-      <td>${row.sku}</td>
+      <td>${skuCell}</td>
       <td>${row.cat}</td>
       <td>${formatCurrency(row.simTP)}</td>
       <td>${formatCurrency(result.SP)}</td>
@@ -118,8 +118,6 @@ function updateSummary(){
   document.getElementById("summaryBar").innerText =
     `Total: ${total} | Showing: ${showing}`;
 }
-
-/* ---------------- EXPORT ---------------- */
 
 function exportFullData(){
 
