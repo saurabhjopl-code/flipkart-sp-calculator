@@ -19,7 +19,11 @@
 </header>
 
 <div class="filter-bar">
-  <input type="text" id="searchInput" placeholder="Search SKU / Partial SKU">
+  <div class="search-wrapper">
+    <input type="text" id="searchInput" placeholder="Search SKU / Partial SKU">
+    <span id="clearSearch" class="clear-search">✕</span>
+  </div>
+
   <select id="categoryFilter">
     <option value="all">All Categories</option>
   </select>
