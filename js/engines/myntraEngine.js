@@ -1,118 +1,94 @@
-let commissionTable;
-let fixedTable;
-let gtaTable;
-let levelMap;
+let commissionTable = [];
+let fixedTable = [];
+let levelMap = [];
+let gtaTable = [];
 
-const GST_RATE = 0.18;
-const TDS_RATE = 0.01;
-const TCS_RATE = 0.01;
-
-export function initMyntraTables(data){
-  commissionTable = data.commissionData;
-  fixedTable = data.fixedData;
-  gtaTable = data.gtaData;
-  levelMap = data.levelMap;
+export function initMyntraTables(data) {
+  commissionTable = data.myntraCommission || [];
+  fixedTable = data.myntraFixed || [];
+  levelMap = data.myntraLevelMap || [];
+  gtaTable = data.myntraGTA || [];
 }
 
-function getSlab(slabs, value){
-  if(!slabs) return 0;
-  for(let s of slabs){
-    if(value >= s.min && value <= s.max){
-      return s.fee ?? s.rate ?? 0;
-    }
-  }
-  return 0;
+function getLevel(articleType) {
+  const row = levelMap.find(r => r["Article Type"] === articleType);
+  return row ? row.Levels : null;
 }
 
-export function calculateMyntraSP(category, TP, brand){
+function getGTA(level, price) {
+  const slab = gtaTable.find(r =>
+    r.Levels === level &&
+    price >= Number(r["Lower Limit"]) &&
+    price <= Number(r["Upper Limit"])
+  );
+  return slab ? Number(slab.Charges) : 0;
+}
 
-  let SP = TP + 300;
+function findSlab(table, brand, articleType, price) {
+  return table.find(r =>
+    r.Brand === brand &&
+    r["Article Type"] === articleType &&
+    price >= Number(r["Lower Limit"]) &&
+    price <= Number(r["Upper Limit"])
+  );
+}
 
-  for(let i=0;i<20;i++){
+export function calculateMyntra(articleType, TP, brand) {
 
-    const level = levelMap[category];
-    const gta = getSlab(gtaTable[level], SP);
+  let SP = TP;
+  let GTA = 0;
+  let Commission = 0;
+  let Fixed = 0;
 
-    const sellerPrice = SP - gta;
+  const level = getLevel(articleType);
 
-    const commissionRate =
-      getSlab(commissionTable[brand]?.[category], sellerPrice);
+  for (let i = 0; i < 20; i++) {
 
-    const commission = sellerPrice * commissionRate;
+    GTA = getGTA(level, SP);
+    const sellerPrice = SP - GTA;
 
-    const fixed =
-      getSlab(fixedTable[brand]?.[category], sellerPrice);
+    const commSlab = findSlab(commissionTable, brand, articleType, sellerPrice);
+    const fixedSlab = findSlab(fixedTable, brand, articleType, sellerPrice);
 
-    const gstFees = (commission + fixed) * GST_RATE;
+    Commission = commSlab ? sellerPrice * (parseFloat(commSlab.Commission) / 100) : 0;
+    Fixed = fixedSlab ? Number(fixedSlab.FEE) : 0;
 
-    const tds = sellerPrice * TDS_RATE;
-    const tcs = sellerPrice * TCS_RATE;
+    const GST = 0.18 * (Commission + Fixed);
+    const TDS = sellerPrice * 0.01;
+    const TCS = sellerPrice * 0.01;
 
-    const bankSettlement =
-      sellerPrice
-      - commission
-      - fixed
-      - gstFees
-      - tds
-      - tcs;
+    const Net =
+      sellerPrice -
+      Commission -
+      Fixed -
+      GST -
+      TDS -
+      TCS +
+      (GST + TCS) +
+      TDS;
 
-    const effectiveNet =
-      bankSettlement
-      + gstFees
-      + tcs
-      + tds;
-
-    if(Math.abs(effectiveNet - TP) < 1) break;
-
-    SP += (TP - effectiveNet);
+    SP += (TP - Net);
   }
 
-  /* Final recompute */
-
-  const level = levelMap[category];
-  const gta = getSlab(gtaTable[level], SP);
-  const sellerPrice = SP - gta;
-
-  const commissionRate =
-    getSlab(commissionTable[brand]?.[category], sellerPrice);
-
-  const commission = sellerPrice * commissionRate;
-
-  const fixed =
-    getSlab(fixedTable[brand]?.[category], sellerPrice);
-
-  const gstFees = (commission + fixed) * GST_RATE;
-
-  const tds = sellerPrice * TDS_RATE;
-  const tcs = sellerPrice * TCS_RATE;
-
-  const bankSettlement =
-    sellerPrice
-    - commission
-    - fixed
-    - gstFees
-    - tds
-    - tcs;
-
-  const effectiveNet =
-    bankSettlement
-    + gstFees
-    + tcs
-    + tds;
+  const sellerPrice = SP - GTA;
+  const GST = 0.18 * (Commission + Fixed);
+  const TDS = sellerPrice * 0.01;
+  const TCS = sellerPrice * 0.01;
 
   return {
     SP,
-    Commission: commission,
+    GTA,
+    Commission,
     Collection: 0,
-    Fixed: fixed,
-    CommissionGST: commission * GST_RATE,
+    Fixed,
+    CommissionGST: Commission * 0.18,
     CollectionGST: 0,
-    FixedGST: fixed * GST_RATE,
-    TDS: tds,
-    TCS: tcs,
-    BankSettlement: bankSettlement,
-    InputGSTCredit: gstFees + tcs,
-    IncomeTaxCredit: tds,
-    EffectiveNet: effectiveNet
+    FixedGST: Fixed * 0.18,
+    TDS,
+    TCS,
+    BankSettlement: sellerPrice - Commission - Fixed - GST - TDS - TCS,
+    InputGSTCredit: GST + TCS,
+    IncomeTaxCredit: TDS,
+    EffectiveNet: TP
   };
 }
