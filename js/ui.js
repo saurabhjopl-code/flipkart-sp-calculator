@@ -20,10 +20,11 @@ renderTable();
 document.getElementById("exportBtn").addEventListener("click", exportCSV);
 }
 
+// ---------------- FILTER ----------------
+
 function populateCategoryFilter(){
 let select = document.getElementById("categoryFilter");
 let categories = [...new Set(allData.map(d => d.cat))];
-
 categories.forEach(cat=>{
 let opt = document.createElement("option");
 opt.value = cat;
@@ -45,87 +46,109 @@ visibleCount = 50;
 renderTable();
 }
 
+// ---------------- TABLE RENDER ----------------
+
 function renderTable(){
 let body = document.getElementById("tableBody");
 body.innerHTML = "";
 
-let safe = 0;
-let totalSP = 0;
-
 filteredData.slice(0, visibleCount).forEach((row,index)=>{
 
-if(row.settlement >= row.simTP) safe++;
-totalSP += row.SP;
+let result = calculateSP(row.cat, row.simTP);
 
 let tr = document.createElement("tr");
-tr.className = row.settlement >= row.simTP ? "safe" : "unsafe";
+tr.className = result.EffectiveNet >= row.simTP ? "safe" : "unsafe";
 
 tr.innerHTML = `
+<td><button class="expand-btn" data-index="${index}">▸</button></td>
 <td>${row.sku}</td>
-<td>${row.cat}</td>
-<td>${row.originalTP}</td>
-<td><input type="number" value="${row.simTP}" data-index="${index}" class="sim-input" style="width:80px"></td>
-<td class="sp-cell">${row.SP}</td>
-<td class="settlement-cell">${row.settlement.toFixed(2)}</td>
-<td class="delta-cell">${row.SP-row.originalSP}</td>
+<td>${row.simTP}</td>
+<td>${result.SP}</td>
+<td>${result.EffectiveNet.toFixed(2)}</td>
 `;
 
 body.appendChild(tr);
 });
 
-updateSummary();
-attachSimulationListeners();
+attachExpandListeners();
 }
 
-function attachSimulationListeners(){
-document.querySelectorAll(".sim-input").forEach(input=>{
-input.addEventListener("input", handleSimulation);
+// ---------------- EXPAND ----------------
+
+function attachExpandListeners(){
+document.querySelectorAll(".expand-btn").forEach(btn=>{
+btn.addEventListener("click", toggleExpand);
 });
 }
 
-function handleSimulation(e){
+function toggleExpand(e){
 
-let input = e.target;
-let index = parseInt(input.getAttribute("data-index"));
-let value = parseFloat(input.value);
+let btn = e.target;
+let index = btn.getAttribute("data-index");
+let rowData = filteredData[index];
+let result = calculateSP(rowData.cat, rowData.simTP);
 
-if(isNaN(value)) return;
+let tr = btn.closest("tr");
 
-let row = filteredData[index];
-row.simTP = value;
-
-let result = calculateSP(row.cat, value);
-row.SP = result.SP;
-row.settlement = result.settlement;
-
-// Update only this row visually
-let tr = input.closest("tr");
-
-tr.className = row.settlement >= row.simTP ? "safe" : "unsafe";
-tr.querySelector(".sp-cell").innerText = row.SP;
-tr.querySelector(".settlement-cell").innerText = row.settlement.toFixed(2);
-tr.querySelector(".delta-cell").innerText = row.SP - row.originalSP;
-
-updateSummary();
+if(tr.nextSibling && tr.nextSibling.classList.contains("breakdown-row")){
+tr.nextSibling.remove();
+btn.innerText = "▸";
+return;
 }
 
-function updateSummary(){
-let safe = filteredData.filter(r=>r.settlement>=r.simTP).length;
-let totalSP = filteredData.reduce((sum,r)=>sum+r.SP,0);
+btn.innerText = "▾";
 
-document.getElementById("summaryBar").innerText =
-`Total: ${filteredData.length} | Safe: ${safe} | Avg SP: ${filteredData.length?Math.round(totalSP/filteredData.length):0}`;
+let breakdownRow = document.createElement("tr");
+breakdownRow.className = "breakdown-row";
+
+breakdownRow.innerHTML = `
+<td colspan="5">
+<div class="breakdown-box">
+
+<b>Order Item Value (SP)</b>: ₹${result.SP}<br>
+Customer Logistics Fee (GTA): ₹${result.GTA}<br>
+Sale Amount: ₹${result.SaleAmount.toFixed(2)}<br><br>
+
+<b>Marketplace Fees</b><br>
+Commission: ₹${result.Commission.toFixed(2)}<br>
+Collection: ₹${result.Collection.toFixed(2)}<br>
+Fixed Fee: ₹${result.Fixed.toFixed(2)}<br><br>
+
+<b>GST (18% on Fees)</b><br>
+Commission GST: ₹${result.CommissionGST.toFixed(2)}<br>
+Collection GST: ₹${result.CollectionGST.toFixed(2)}<br>
+Fixed GST: ₹${result.FixedGST.toFixed(2)}<br><br>
+
+<b>TDS (1%)</b>: ₹${result.TDS.toFixed(2)}<br>
+<b>TCS (1%)</b>: ₹${result.TCS.toFixed(2)}<br><br>
+
+<hr>
+
+<b>Bank Settlement</b>: ₹${result.BankSettlement.toFixed(2)}<br>
+Input GST Credit (GST + TCS): ₹${result.InputGSTCredit.toFixed(2)}<br>
+Income Tax Credit (TDS): ₹${result.IncomeTaxCredit.toFixed(2)}<br><br>
+
+<b>Effective Net</b>: ₹${result.EffectiveNet.toFixed(2)}
+
+</div>
+</td>
+`;
+
+tr.parentNode.insertBefore(breakdownRow, tr.nextSibling);
 }
+
+// ---------------- EXPORT ----------------
 
 function exportCSV(){
-let csv="SKU,Category,Original TP,Sim TP,SP,Settlement\n";
+let csv="SKU,TP,SP,EffectiveNet\n";
 filteredData.forEach(r=>{
-csv+=`${r.sku},${r.cat},${r.originalTP},${r.simTP},${r.SP},${r.settlement}\n`;
+let result = calculateSP(r.cat, r.simTP);
+csv+=`${r.sku},${r.simTP},${result.SP},${result.EffectiveNet}\n`;
 });
 let blob=new Blob([csv],{type:"text/csv"});
 let url=URL.createObjectURL(blob);
 let a=document.createElement("a");
 a.href=url;
-a.download="simulation_export.csv";
+a.download="pricing_export.csv";
 a.click();
 }
