@@ -11,30 +11,35 @@ body {
 .app-header {
   display: flex;
   align-items: center;
-  justify-content: center; /* CENTER TITLE */
-  padding: 18px 25px;
-  background: #ffffff; /* WHITE HEADER */
+  padding: 15px 25px;
+  background: #ffffff;
   border-bottom: 1px solid #ddd;
   position: relative;
 }
 
+/* Logo LEFT */
 .header-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
+/* Center Title absolutely */
 .title {
-  font-size: 22px; /* Bigger */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
   font-weight: 700;
   color: #111;
 }
 
+/* Logo */
 .app-logo {
-  height: 36px;
+  height: 34px;
 }
 
-/* Export button positioned right */
+/* Export button RIGHT */
 #exportBtn {
   position: absolute;
   right: 25px;
@@ -55,21 +60,19 @@ body {
   align-items: center;
 }
 
+/* Search wrapper */
 .search-wrapper {
   position: relative;
 }
 
-.search-wrapper input {
-  height: 38px; /* MATCH HEIGHT */
-  padding: 8px 30px 8px 10px;
-  width: 250px;
-  font-size: 13px;
-}
-
+/* SAME HEIGHT FOR BOTH */
+.search-wrapper input,
 #categoryFilter {
-  height: 38px; /* MATCH SEARCH HEIGHT */
+  height: 34px;
   padding: 0 10px;
   font-size: 13px;
+  width: 250px;
+  box-sizing: border-box;
 }
 
 .clear-search {
