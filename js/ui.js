@@ -31,6 +31,23 @@ export function initUI(data) {
     .addEventListener("click", exportFullData);
 }
 
+/* ================= URL BUILDER ================= */
+
+function buildProductURL(row) {
+
+  if (!row.fsn) return null;
+
+  if (row.mp === "FLIPKART") {
+    return "https://www.flipkart.com/product/p/itme?pid=" + row.fsn;
+  }
+
+  if (row.mp === "MYNTRA") {
+    return "https://www.myntra.com/" + row.fsn;
+  }
+
+  return null;
+}
+
 /* ================= TABS ================= */
 
 function setupTabs() {
@@ -142,10 +159,16 @@ function renderTable() {
               (result.Collection || 0) +
               (result.Fixed || 0));
 
+    const productURL = buildProductURL(row);
+
+    const linkIcon = productURL
+      ? `<a href="${productURL}" target="_blank" title="Open on ${row.mp}" style="text-decoration:none;">🔗</a>`
+      : "";
+
     const tr = document.createElement("tr");
 
     tr.innerHTML =
-      "<td>" + row.sku + "</td>" +
+      "<td>" + row.sku + " " + linkIcon + "</td>" +
       "<td>" + row.cat + "</td>" +
       "<td>" + (row.brand || "-") + "</td>" +
       "<td>" + formatCurrency(row.simTP) + "</td>" +
@@ -202,7 +225,8 @@ function exportFullData() {
     "Bank Settlement",
     "Input GST Credit",
     "Income Tax Credit",
-    "Effective Net"
+    "Effective Net",
+    "Product URL"
   ].join(","));
 
   filteredData.forEach(row => {
@@ -213,6 +237,8 @@ function exportFullData() {
       0.18 * ((result.Commission || 0) +
               (result.Collection || 0) +
               (result.Fixed || 0));
+
+    const productURL = buildProductURL(row) || "";
 
     csv.push([
       row.sku,
@@ -230,7 +256,8 @@ function exportFullData() {
       result.BankSettlement,
       result.InputGSTCredit,
       result.IncomeTaxCredit,
-      result.EffectiveNet
+      result.EffectiveNet,
+      productURL
     ].join(","));
   });
 
