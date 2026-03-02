@@ -111,3 +111,13 @@ th {
   background:#111;
   color:white;
 }
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  height: 32px;
+  width: auto;
+}
