@@ -137,3 +137,47 @@ padding:15px;
 line-height:1.6;
 font-size:13px;
 }
+.pricing-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.pricing-table th {
+background: #111;
+color: #fff;
+padding: 10px;
+text-align: left;
+font-size: 13px;
+}
+
+.pricing-table td {
+padding: 10px;
+border-bottom: 1px solid #eaeaea;
+font-size: 13px;
+}
+
+.safe {
+background: #f3fff3;
+}
+
+.unsafe {
+background: #fff3f3;
+}
+
+.expand-btn{
+background:none;
+border:none;
+cursor:pointer;
+font-size:14px;
+}
+
+.breakdown-row td{
+background:#fafafa;
+padding:15px;
+border-bottom:1px solid #ddd;
+}
+
+.breakdown-box{
+line-height:1.7;
+font-size:13px;
+}
