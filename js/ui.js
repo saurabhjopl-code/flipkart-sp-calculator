@@ -30,14 +30,21 @@ export function initUI(data) {
 /* ================= TAB SWITCH ================= */
 
 function setupTabs() {
-  document.getElementById("flipkartTab").onclick = () => {
+  const fkBtn = document.getElementById("flipkartTab");
+  const myBtn = document.getElementById("myntraTab");
+
+  fkBtn.onclick = () => {
     activeMP = "FLIPKART";
+    fkBtn.classList.add("active");
+    myBtn.classList.remove("active");
     populateCategoryFilter();
     applyFilters();
   };
 
-  document.getElementById("myntraTab").onclick = () => {
+  myBtn.onclick = () => {
     activeMP = "MYNTRA";
+    myBtn.classList.add("active");
+    fkBtn.classList.remove("active");
     populateCategoryFilter();
     applyFilters();
   };
