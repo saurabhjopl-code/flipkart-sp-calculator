@@ -14,14 +14,17 @@ export async function loadData(){
     let sku = rows[i][0]?.trim();
     let category = rows[i][1]?.trim().toLowerCase();
     let TP = parseFloat(rows[i][2]);
+    let mp = rows[i][3]?.trim()?.toUpperCase() || "FLIPKART";
+    let fsn = rows[i][4]?.trim();
 
     if(!sku || !category || !TP) continue;
 
     data.push({
       sku,
       cat: category,
-      originalTP: TP,
-      simTP: TP
+      simTP: TP,
+      mp,
+      fsn
     });
   }
 
