@@ -3,9 +3,15 @@ import { calculateSP } from "./engineRouter.js";
 let allData = [];
 let filteredData = [];
 let visibleCount = 50;
+let activeMP = "FLIPKART";
+
+/* ================= INIT ================= */
 
 export function initUI(data) {
   allData = data;
+
+  setupTabs();
+  populateCategoryFilter();
   applyFilters();
 
   document
@@ -13,8 +19,52 @@ export function initUI(data) {
     .addEventListener("input", applyFilters);
 
   document
+    .getElementById("categoryFilter")
+    .addEventListener("change", applyFilters);
+
+  document
     .getElementById("loadMoreBtn")
     .addEventListener("click", loadMore);
+}
+
+/* ================= TAB SWITCH ================= */
+
+function setupTabs() {
+  document.getElementById("flipkartTab").onclick = () => {
+    activeMP = "FLIPKART";
+    populateCategoryFilter();
+    applyFilters();
+  };
+
+  document.getElementById("myntraTab").onclick = () => {
+    activeMP = "MYNTRA";
+    populateCategoryFilter();
+    applyFilters();
+  };
+}
+
+/* ================= CATEGORY ================= */
+
+function populateCategoryFilter() {
+  const select = document.getElementById("categoryFilter");
+  select.innerHTML = `<option value="all">All Categories</option>`;
+
+  const categories = [
+    ...new Set(
+      allData
+        .filter((d) => d.mp === activeMP)
+        .map((d) => d.cat)
+    ),
+  ];
+
+  categories.sort();
+
+  categories.forEach((cat) => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    select.appendChild(opt);
+  });
 }
 
 /* ================= FILTERING ================= */
@@ -24,9 +74,16 @@ function applyFilters() {
     .getElementById("searchInput")
     .value.toLowerCase();
 
-  filteredData = allData.filter((row) =>
-    row.sku.toLowerCase().includes(search)
-  );
+  const category =
+    document.getElementById("categoryFilter").value;
+
+  filteredData = allData.filter((row) => {
+    return (
+      row.mp === activeMP &&
+      row.sku.toLowerCase().includes(search) &&
+      (category === "all" || row.cat === category)
+    );
+  });
 
   visibleCount = 50;
 
@@ -49,48 +106,49 @@ function renderTable() {
   const body = document.getElementById("tableBody");
   body.innerHTML = "";
 
-  const rows = filteredData.slice(0, visibleCount);
+  filteredData
+    .slice(0, visibleCount)
+    .forEach((row) => {
+      const result = calculateSP(
+        row.cat,
+        row.simTP,
+        row.mp,
+        row.brand
+      );
 
-  rows.forEach((row) => {
-    const result = calculateSP(
-      row.cat,
-      row.simTP,
-      row.mp,
-      row.brand
-    );
+      const GSTonFees =
+        (result.CommissionGST || 0) +
+        (result.CollectionGST || 0) +
+        (result.FixedGST || 0);
 
-    const GSTonFees =
-      (result.CommissionGST || 0) +
-      (result.CollectionGST || 0) +
-      (result.FixedGST || 0);
+      const tr = document.createElement("tr");
 
-    const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + row.sku + "</td>" +
+        "<td>" + row.cat + "</td>" +
+        "<td>" + formatCurrency(row.simTP) + "</td>" +
+        "<td>" + formatCurrency(result.SP) + "</td>" +
+        "<td>" + formatCurrency(result.Commission) + "</td>" +
+        "<td>" + formatCurrency(result.Collection) + "</td>" +
+        "<td>" + formatCurrency(result.Fixed) + "</td>" +
+        "<td>" + formatCurrency(GSTonFees) + "</td>" +
+        "<td>" + formatCurrency(result.TDS) + "</td>" +
+        "<td>" + formatCurrency(result.TCS) + "</td>" +
+        "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
+        "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
+        "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
+        "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
 
-    tr.innerHTML =
-      "<td>" + row.sku + "</td>" +
-      "<td>" + row.cat + "</td>" +
-      "<td>" + formatCurrency(row.simTP) + "</td>" +
-      "<td>" + formatCurrency(result.SP) + "</td>" +
-      "<td>" + formatCurrency(result.Commission) + "</td>" +
-      "<td>" + formatCurrency(result.Collection) + "</td>" +
-      "<td>" + formatCurrency(result.Fixed) + "</td>" +
-      "<td>" + formatCurrency(GSTonFees) + "</td>" +
-      "<td>" + formatCurrency(result.TDS) + "</td>" +
-      "<td>" + formatCurrency(result.TCS) + "</td>" +
-      "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
-      "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
-      "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
-      "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
-
-    body.appendChild(tr);
-  });
+      body.appendChild(tr);
+    });
 }
 
 /* ================= SUMMARY ================= */
 
 function updateSummary() {
   document.getElementById("summaryBar").innerText =
-    "Total: " +
+    activeMP +
+    " | Total: " +
     filteredData.length +
     " | Showing: " +
     Math.min(visibleCount, filteredData.length);
