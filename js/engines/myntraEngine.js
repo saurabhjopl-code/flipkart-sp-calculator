@@ -1,39 +1,32 @@
-let commissionTable = [];
-let fixedTable = [];
-let levelMap = [];
-let gtaTable = [];
+export function calculateMyntra(articleType, TP, brand, tables) {
 
-export function initMyntraTables(data) {
-  commissionTable = data.myntraCommission || [];
-  fixedTable = data.myntraFixed || [];
-  levelMap = data.myntraLevelMap || [];
-  gtaTable = data.myntraGTA || [];
-}
+  const commissionTable = tables.myntraCommission || [];
+  const fixedTable = tables.myntraFixed || [];
+  const levelMap = tables.myntraLevelMap || [];
+  const gtaTable = tables.myntraGTA || [];
 
-function getLevel(articleType) {
-  const row = levelMap.find(r => r["Article Type"] === articleType);
-  return row ? row.Levels : null;
-}
+  function getLevel(articleType) {
+    const row = levelMap.find(r => r["Article Type"] === articleType);
+    return row ? row.Levels : null;
+  }
 
-function getGTA(level, price) {
-  const slab = gtaTable.find(r =>
-    r.Levels === level &&
-    price >= Number(r["Lower Limit"]) &&
-    price <= Number(r["Upper Limit"])
-  );
-  return slab ? Number(slab.Charges) : 0;
-}
+  function getGTA(level, price) {
+    const slab = gtaTable.find(r =>
+      r.Levels === level &&
+      price >= Number(r["Lower Limit"]) &&
+      price <= Number(r["Upper Limit"])
+    );
+    return slab ? Number(slab.Charges) : 0;
+  }
 
-function findSlab(table, brand, articleType, price) {
-  return table.find(r =>
-    r.Brand === brand &&
-    r["Article Type"] === articleType &&
-    price >= Number(r["Lower Limit"]) &&
-    price <= Number(r["Upper Limit"])
-  );
-}
-
-export function calculateMyntra(articleType, TP, brand) {
+  function findSlab(table, brand, articleType, price) {
+    return table.find(r =>
+      r.Brand === brand &&
+      r["Article Type"] === articleType &&
+      price >= Number(r["Lower Limit"]) &&
+      price <= Number(r["Upper Limit"])
+    );
+  }
 
   let SP = TP;
   let GTA = 0;
@@ -64,7 +57,8 @@ export function calculateMyntra(articleType, TP, brand) {
       GST -
       TDS -
       TCS +
-      (GST + TCS) +
+      GST +
+      TCS +
       TDS;
 
     SP += (TP - Net);
@@ -81,9 +75,6 @@ export function calculateMyntra(articleType, TP, brand) {
     Commission,
     Collection: 0,
     Fixed,
-    CommissionGST: Commission * 0.18,
-    CollectionGST: 0,
-    FixedGST: Fixed * 0.18,
     TDS,
     TCS,
     BankSettlement: sellerPrice - Commission - Fixed - GST - TDS - TCS,
