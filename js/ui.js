@@ -75,18 +75,18 @@ function renderTable(){
     tr.innerHTML = `
       <td>${row.sku}</td>
       <td>${row.cat}</td>
-      <td>${format₹(row.simTP)}</td>
-      <td>${format₹(result.SP)}</td>
-      <td>${format₹(result.Commission)}</td>
-      <td>${format₹(result.Collection)}</td>
-      <td>${format₹(result.Fixed)}</td>
-      <td>${format₹(GSTonFees)}</td>
-      <td>${format₹(result.TDS)}</td>
-      <td>${format₹(result.TCS)}</td>
-      <td>${format₹(result.BankSettlement)}</td>
-      <td>${format₹(result.InputGSTCredit)}</td>
-      <td>${format₹(result.IncomeTaxCredit)}</td>
-      <td><b>${format₹(result.EffectiveNet)}</b></td>
+      <td>${formatCurrency((row.simTP)}</td>
+      <td>${formatCurrency((result.SP)}</td>
+      <td>${formatCurrency((result.Commission)}</td>
+      <td>${formatCurrency((result.Collection)}</td>
+      <td>${formatCurrency((result.Fixed)}</td>
+      <td>${formatCurrency((GSTonFees)}</td>
+      <td>${formatCurrency((result.TDS)}</td>
+      <td>${formatCurrency((result.TCS)}</td>
+      <td>${formatCurrency((result.BankSettlement)}</td>
+      <td>${formatCurrency((result.InputGSTCredit)}</td>
+      <td>${formatCurrency((result.IncomeTaxCredit)}</td>
+      <td><b>${formatCurrency((result.EffectiveNet)}</b></td>
     `;
 
     body.appendChild(tr);
