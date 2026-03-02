@@ -11,38 +11,37 @@ body {
 .app-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 15px 25px;
-  background: #111;
-  color: white;
+  justify-content: center; /* CENTER TITLE */
+  padding: 18px 25px;
+  background: #ffffff; /* WHITE HEADER */
+  border-bottom: 1px solid #ddd;
+  position: relative;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px; /* Bigger */
+  font-weight: 700;
+  color: #111;
 }
 
 .app-logo {
-  height: 32px;
+  height: 36px;
 }
 
-button {
-  padding: 8px 14px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
+/* Export button positioned right */
 #exportBtn {
+  position: absolute;
+  right: 25px;
   background: #ffcc00;
   font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 4px;
 }
 
 /* ---------------- FILTER BAR ---------------- */
@@ -61,8 +60,15 @@ button {
 }
 
 .search-wrapper input {
-  padding: 8px 30px 8px 8px;
+  height: 38px; /* MATCH HEIGHT */
+  padding: 8px 30px 8px 10px;
   width: 250px;
+  font-size: 13px;
+}
+
+#categoryFilter {
+  height: 38px; /* MATCH SEARCH HEIGHT */
+  padding: 0 10px;
   font-size: 13px;
 }
 
@@ -109,7 +115,7 @@ button {
 .pricing-table td {
   padding: 8px;
   border: 1px solid #ddd;
-  text-align: center; /* ALL CENTER */
+  text-align: center;
   font-size: 12px;
 }
 
@@ -138,4 +144,5 @@ button {
   margin: 20px auto;
   background: #111;
   color: white;
+  padding: 8px 16px;
 }
