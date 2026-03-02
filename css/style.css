@@ -1,1 +1,113 @@
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#f4f6f9;
+}
 
+.app-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px 25px;
+  background:#111;
+  color:white;
+}
+
+.logo {
+  font-size:20px;
+}
+
+.title {
+  font-size:18px;
+  font-weight:600;
+}
+
+button {
+  padding:8px 14px;
+  border:none;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+#exportBtn {
+  background:#ffcc00;
+}
+
+.progress-container {
+  width:100%;
+  background:#ddd;
+  height:6px;
+}
+
+#progressBar {
+  width:0%;
+  height:6px;
+  background:#111;
+  transition:width 0.2s;
+}
+
+.progress-text {
+  text-align:center;
+  font-size:12px;
+  padding:4px;
+}
+
+.filter-bar {
+  display:flex;
+  gap:15px;
+  padding:15px 25px;
+  background:white;
+  border-bottom:1px solid #ddd;
+}
+
+.filter-bar input,
+.filter-bar select {
+  padding:8px;
+  width:250px;
+}
+
+.summary-bar {
+  padding:10px 25px;
+  background:#fafafa;
+  font-weight:500;
+  border-bottom:1px solid #ddd;
+}
+
+.table-container {
+  padding:20px;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+th, td {
+  padding:8px;
+  border:1px solid #ddd;
+  text-align:center;
+  font-size:13px;
+}
+
+th {
+  background:#111;
+  color:white;
+  position:sticky;
+  top:0;
+}
+
+.safe {
+  background:#e8f5e9;
+}
+
+.unsafe {
+  background:#ffebee;
+}
+
+.load-more {
+  display:block;
+  margin:20px auto;
+  background:#111;
+  color:white;
+}
