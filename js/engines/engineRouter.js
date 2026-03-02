@@ -1,12 +1,11 @@
 import { calculateFlipkartSP } from "./flipkartEngine.js";
 import { calculateMyntraSP } from "./myntraEngine.js";
 
-export function calculateSP(category, TP, mp){
+export function calculateSP(category, TP, mp, brand){
 
   if(mp === "MYNTRA"){
-    return calculateMyntraSP(category, TP);
+    return calculateMyntraSP(category, TP, brand);
   }
 
-  // FLIPKART + SHOPSY handled in same engine
   return calculateFlipkartSP(category, TP);
 }
