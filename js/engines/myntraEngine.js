@@ -1,12 +1,13 @@
-/* ===============================
-   MYNTRA ENGINE V2
-   =============================== */
+/* ==========================================
+   MYNTRA ENGINE V2 – PRODUCTION VERSION
+   Brand + Article + Level Driven
+========================================== */
 
 const GST_RATE = 0.18;
 const TDS_RATE = 0.01;
 const TCS_RATE = 0.01;
 
-/* ---------------- LEVEL MAP ---------------- */
+/* ================= LEVEL MAP ================= */
 
 const levelMap = {
   "Co-Ords": "Level 1",
@@ -20,7 +21,7 @@ const levelMap = {
   "Dress Material": "Level 3"
 };
 
-/* ---------------- GTA TABLE ---------------- */
+/* ================= GTA TABLE ================= */
 
 const gtaTable = {
   "Level 1": [
@@ -47,21 +48,149 @@ const gtaTable = {
   ]
 };
 
-/* ---------------- COMMISSION TABLE ---------------- */
-/* Format: Brand → Article → slabs */
+/* ================= COMMISSION TABLE ================= */
+/* Only unique rate transitions stored to reduce size */
 
-const commissionTable = {}; 
-/* ⚠️ For production:
-   We will inject your full commission data here.
-   For now it will resolve dynamically fallback to 0
-*/
+const commissionTable = {
 
-/* ---------------- FIXED FEE TABLE ---------------- */
+  "Monira": {
+    "Sarees": [
+      {min:0, max:800, rate:0.04},
+      {min:800, max:1000, rate:0.07},
+      {min:1000, max:99999999, rate:0.15}
+    ]
+  },
 
-const fixedFeeTable = {};
-/* Same as above — we will inject full slabs next step */
+  "Rajnandini": {
 
-/* ---------------- SLAB RESOLVERS ---------------- */
+    "Tunics": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.2275},
+      {min:1000, max:2000, rate:0.2075},
+      {min:2000, max:99999999, rate:0.1975}
+    ],
+
+    "Palazzos": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.2475},
+      {min:1000, max:2000, rate:0.2275},
+      {min:2000, max:99999999, rate:0.2075}
+    ],
+
+    "Co-Ords": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.15},
+      {min:1000, max:2000, rate:0.21},
+      {min:2000, max:99999999, rate:0.20}
+    ],
+
+    "Dresses": [
+      {min:0, max:600, rate:0.02},
+      {min:600, max:800, rate:0.04},
+      {min:800, max:1000, rate:0.22},
+      {min:1000, max:99999999, rate:0.19}
+    ],
+
+    "Kurtas": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.26},
+      {min:1000, max:2000, rate:0.23},
+      {min:2000, max:99999999, rate:0.22}
+    ],
+
+    "Sarees": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.27},
+      {min:1000, max:99999999, rate:0.23}
+    ]
+  },
+
+  "Roly Poly": {
+
+    "Tunics": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.2275},
+      {min:1000, max:2000, rate:0.2075},
+      {min:2000, max:99999999, rate:0.1975}
+    ],
+
+    "Dresses": [
+      {min:0, max:600, rate:0.02},
+      {min:600, max:800, rate:0.04},
+      {min:800, max:1000, rate:0.2375},
+      {min:1000, max:99999999, rate:0.2075}
+    ],
+
+    "Kurta Sets": [
+      {min:0, max:900, rate:0.02},
+      {min:900, max:1000, rate:0.25},
+      {min:1000, max:2000, rate:0.22},
+      {min:2000, max:99999999, rate:0.20}
+    ]
+  },
+
+  "KALINI": {
+
+    "Dresses": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.08},
+      {min:1000, max:2000, rate:0.16},
+      {min:2000, max:99999999, rate:0.18}
+    ],
+
+    "Kurtas": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:1000, rate:0.08},
+      {min:1000, max:2000, rate:0.12},
+      {min:2000, max:99999999, rate:0.18}
+    ],
+
+    "Sarees": [
+      {min:0, max:800, rate:0.02},
+      {min:800, max:2000, rate:0.08},
+      {min:2000, max:99999999, rate:0.18}
+    ]
+  }
+
+};
+
+/* ================= FIXED FEE TABLE ================= */
+/* Only unique transitions stored */
+
+const fixedFeeTable = {
+  "Rajnandini": {
+    "Kurtas": [
+      {min:0, max:300, fee:15},
+      {min:300, max:500, fee:17},
+      {min:500, max:1000, fee:27},
+      {min:1000, max:2000, fee:45},
+      {min:2000, max:99999999, fee:61}
+    ]
+  },
+
+  "Roly Poly": {
+    "Kurtas": [
+      {min:0, max:300, fee:15},
+      {min:300, max:500, fee:17},
+      {min:500, max:1000, fee:27},
+      {min:1000, max:2000, fee:45},
+      {min:2000, max:99999999, fee:61}
+    ]
+  },
+
+  "KALINI": {
+    "Kurtas": [
+      {min:0, max:300, fee:0},
+      {min:300, max:500, fee:8},
+      {min:500, max:800, fee:20},
+      {min:800, max:1000, fee:27},
+      {min:1000, max:2000, fee:45},
+      {min:2000, max:99999999, fee:61}
+    ]
+  }
+};
+
+/* ================= HELPER ================= */
 
 function getSlabValue(table, value){
   if(!table) return 0;
@@ -74,36 +203,25 @@ function getSlabValue(table, value){
 }
 
 function getCommission(brand, category, sellerPrice){
-  const brandData = commissionTable[brand];
-  if(!brandData) return 0;
-
-  const catData = brandData[category];
-  if(!catData) return 0;
-
-  return getSlabValue(catData, sellerPrice);
+  return getSlabValue(
+    commissionTable[brand]?.[category],
+    sellerPrice
+  );
 }
 
-function getFixedFee(brand, category, sellerPrice){
-  const brandData = fixedFeeTable[brand];
-  if(!brandData) return 0;
-
-  const catData = brandData[category];
-  if(!catData) return 0;
-
-  return getSlabValue(catData, sellerPrice);
+function getFixed(brand, category, sellerPrice){
+  return getSlabValue(
+    fixedFeeTable[brand]?.[category],
+    sellerPrice
+  );
 }
 
 function getGTA(category, SP){
   const level = levelMap[category];
-  if(!level) return 0;
-
-  const slabs = gtaTable[level];
-  return getSlabValue(slabs, SP);
+  return getSlabValue(gtaTable[level], SP);
 }
 
-/* ===============================
-   MAIN CALCULATION
-   =============================== */
+/* ================= MAIN ================= */
 
 export function calculateMyntraSP(category, TP, brand){
 
@@ -112,15 +230,13 @@ export function calculateMyntraSP(category, TP, brand){
   for(let i=0;i<20;i++){
 
     let gta = getGTA(category, SP);
-
     let sellerPrice = SP - gta;
 
     let commissionRate = getCommission(brand, category, sellerPrice);
     let commission = sellerPrice * commissionRate;
+    let fixed = getFixed(brand, category, sellerPrice);
 
-    let fixedFee = getFixedFee(brand, category, sellerPrice);
-
-    let gstOnFees = (commission + fixedFee) * GST_RATE;
+    let gstFees = (commission + fixed) * GST_RATE;
 
     let tds = sellerPrice * TDS_RATE;
     let tcs = sellerPrice * TCS_RATE;
@@ -128,25 +244,22 @@ export function calculateMyntraSP(category, TP, brand){
     let bankSettlement =
       sellerPrice
       - commission
-      - fixedFee
-      - gstOnFees
+      - fixed
+      - gstFees
       - tds
       - tcs;
 
-    let inputGSTCredit = gstOnFees + tcs;
-    let incomeTaxCredit = tds;
-
     let effectiveNet =
       bankSettlement
-      + inputGSTCredit
-      + incomeTaxCredit;
+      + gstFees
+      + tcs
+      + tds;
 
     if(Math.abs(effectiveNet - TP) < 1){
       break;
     }
 
-    let adjustment = TP - effectiveNet;
-    SP += adjustment;
+    SP += (TP - effectiveNet);
   }
 
   /* FINAL COMPUTE */
@@ -156,41 +269,39 @@ export function calculateMyntraSP(category, TP, brand){
 
   let commissionRate = getCommission(brand, category, sellerPrice);
   let commission = sellerPrice * commissionRate;
-  let fixedFee = getFixedFee(brand, category, sellerPrice);
-  let gstOnFees = (commission + fixedFee) * GST_RATE;
+  let fixed = getFixed(brand, category, sellerPrice);
 
+  let gstFees = (commission + fixed) * GST_RATE;
   let tds = sellerPrice * TDS_RATE;
   let tcs = sellerPrice * TCS_RATE;
 
   let bankSettlement =
     sellerPrice
     - commission
-    - fixedFee
-    - gstOnFees
+    - fixed
+    - gstFees
     - tds
     - tcs;
 
-  let inputGSTCredit = gstOnFees + tcs;
-  let incomeTaxCredit = tds;
-
   let effectiveNet =
     bankSettlement
-    + inputGSTCredit
-    + incomeTaxCredit;
+    + gstFees
+    + tcs
+    + tds;
 
   return {
     SP,
     Commission: commission,
     Collection: 0,
-    Fixed: fixedFee,
+    Fixed: fixed,
     CommissionGST: commission * GST_RATE,
     CollectionGST: 0,
-    FixedGST: fixedFee * GST_RATE,
+    FixedGST: fixed * GST_RATE,
     TDS: tds,
     TCS: tcs,
     BankSettlement: bankSettlement,
-    InputGSTCredit: inputGSTCredit,
-    IncomeTaxCredit: incomeTaxCredit,
+    InputGSTCredit: gstFees + tcs,
+    IncomeTaxCredit: tds,
     EffectiveNet: effectiveNet
   };
 }
