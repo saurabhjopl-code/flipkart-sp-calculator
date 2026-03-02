@@ -1,11 +1,11 @@
 import { calculateFlipkart } from "./engines/flipkartEngine.js";
 import { calculateMyntra } from "./engines/myntraEngine.js";
 
-export function calculateSP(category, TP, mp, brand) {
+export function calculateSP(row, tables) {
 
-  if (mp === "MYNTRA") {
-    return calculateMyntra(category, TP, brand);
+  if (row.mp === "MYNTRA") {
+    return calculateMyntra(row.cat, row.simTP, row.brand, tables);
   }
 
-  return calculateFlipkart(category, TP);
+  return calculateFlipkart(row.cat, row.simTP, tables);
 }
