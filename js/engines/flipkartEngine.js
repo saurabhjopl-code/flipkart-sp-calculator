@@ -1,33 +1,32 @@
 /* ==========================================
-   FLIPKART / SHOPSY ENGINE – V1.5 STABLE
+   FLIPKART / SHOPSY ENGINE – DYNAMIC
 ========================================== */
+
+let commissionTable;
+let fixedTable;
+let collectionTable;
+let gtaTable;
 
 const GST_RATE = 0.18;
 const TDS_RATE = 0.01;
 const TCS_RATE = 0.01;
 
-/* These should already exist in your app
-   If you have dynamic FK slabs, keep them.
-   If not, this is simplified placeholder
-*/
-
-function getCommission(category, sellerPrice){
-  return 0; // your existing FK logic should replace this
+export function initFlipkartTables(data){
+  commissionTable = data.fkCommission;
+  fixedTable = data.fkFixed;
+  collectionTable = data.fkCollection;
+  gtaTable = data.fkGTA;
 }
 
-function getFixedFee(category, sellerPrice){
-  return 0; // your existing FK logic should replace this
+function getSlab(slabs, value){
+  if(!slabs) return 0;
+  for(let s of slabs){
+    if(value >= s.min && value <= s.max){
+      return s.fee ?? s.rate ?? 0;
+    }
+  }
+  return 0;
 }
-
-function getCollection(category, sellerPrice){
-  return 0; // your existing FK logic should replace this
-}
-
-function getGTA(category, SP){
-  return 0; // your existing FK GTA logic should replace this
-}
-
-/* ================= MAIN ================= */
 
 export function calculateSP(category, TP){
 
@@ -35,19 +34,28 @@ export function calculateSP(category, TP){
 
   for(let i=0;i<20;i++){
 
-    let gta = getGTA(category, SP);
-    let sellerPrice = SP - gta;
+    const gta = getSlab(gtaTable[category], SP);
 
-    let commission = sellerPrice * getCommission(category, sellerPrice);
-    let collection = sellerPrice * getCollection(category, sellerPrice);
-    let fixed = getFixedFee(category, sellerPrice);
+    const sellerPrice = SP - gta;
 
-    let gstFees = (commission + collection + fixed) * GST_RATE;
+    const commissionRate =
+      getSlab(commissionTable[category], sellerPrice);
 
-    let tds = sellerPrice * TDS_RATE;
-    let tcs = sellerPrice * TCS_RATE;
+    const collectionRate =
+      getSlab(collectionTable[category], sellerPrice);
 
-    let bankSettlement =
+    const commission = sellerPrice * commissionRate;
+    const collection = sellerPrice * collectionRate;
+    const fixed =
+      getSlab(fixedTable[category], sellerPrice);
+
+    const gstFees =
+      (commission + collection + fixed) * GST_RATE;
+
+    const tds = sellerPrice * TDS_RATE;
+    const tcs = sellerPrice * TCS_RATE;
+
+    const bankSettlement =
       sellerPrice
       - commission
       - collection
@@ -56,7 +64,7 @@ export function calculateSP(category, TP){
       - tds
       - tcs;
 
-    let effectiveNet =
+    const effectiveNet =
       bankSettlement
       + gstFees
       + tcs
@@ -67,19 +75,56 @@ export function calculateSP(category, TP){
     SP += (TP - effectiveNet);
   }
 
+  /* Final compute */
+
+  const gta = getSlab(gtaTable[category], SP);
+  const sellerPrice = SP - gta;
+
+  const commissionRate =
+    getSlab(commissionTable[category], sellerPrice);
+
+  const collectionRate =
+    getSlab(collectionTable[category], sellerPrice);
+
+  const commission = sellerPrice * commissionRate;
+  const collection = sellerPrice * collectionRate;
+  const fixed =
+    getSlab(fixedTable[category], sellerPrice);
+
+  const gstFees =
+    (commission + collection + fixed) * GST_RATE;
+
+  const tds = sellerPrice * TDS_RATE;
+  const tcs = sellerPrice * TCS_RATE;
+
+  const bankSettlement =
+    sellerPrice
+    - commission
+    - collection
+    - fixed
+    - gstFees
+    - tds
+    - tcs;
+
+  const effectiveNet =
+    bankSettlement
+    + gstFees
+    + tcs
+    + tds;
+
   return {
     SP,
-    Commission: 0,
-    Collection: 0,
-    Fixed: 0,
-    CommissionGST: 0,
-    CollectionGST: 0,
-    FixedGST: 0,
-    TDS: 0,
-    TCS: 0,
-    BankSettlement: 0,
-    InputGSTCredit: 0,
-    IncomeTaxCredit: 0,
-    EffectiveNet: TP
+    Commission: commission,
+    Collection: collection,
+    Fixed: fixed,
+    CommissionGST: commission * GST_RATE,
+    CollectionGST: collection * GST_RATE,
+    FixedGST: fixed * GST_RATE,
+    TDS: tds,
+    TCS: tcs,
+    BankSettlement: bankSettlement,
+    InputGSTCredit: gstFees + tcs,
+    IncomeTaxCredit: tds,
+    EffectiveNet: effectiveNet
   };
 }
