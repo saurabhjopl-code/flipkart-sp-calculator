@@ -142,20 +142,22 @@ function renderTable() {
     const tr = document.createElement("tr");
 
     tr.innerHTML =
-      "<td>" + row.sku + "</td>" +
-      "<td>" + row.cat + "</td>" +
-      "<td>" + formatCurrency(row.simTP) + "</td>" +
-      "<td>" + formatCurrency(result.SP) + "</td>" +
-      "<td>" + formatCurrency(result.Commission) + "</td>" +
-      "<td>" + formatCurrency(result.Collection) + "</td>" +
-      "<td>" + formatCurrency(result.Fixed) + "</td>" +
-      "<td>" + formatCurrency(GSTonFees) + "</td>" +
-      "<td>" + formatCurrency(result.TDS) + "</td>" +
-      "<td>" + formatCurrency(result.TCS) + "</td>" +
-      "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
-      "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
-      "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
-      "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
+  "<td>" + row.sku + "</td>" +
+  "<td>" + row.cat + "</td>" +
+  "<td>" + (row.brand || "-") + "</td>" +
+  "<td>" + formatCurrency(row.simTP) + "</td>" +
+  "<td>" + formatCurrency(result.SP) + "</td>" +
+  "<td>" + formatCurrency(result.GTA) + "</td>" +
+  "<td>" + formatCurrency(result.Commission) + "</td>" +
+  "<td>" + formatCurrency(result.Collection) + "</td>" +
+  "<td>" + formatCurrency(result.Fixed) + "</td>" +
+  "<td>" + formatCurrency(GSTonFees) + "</td>" +
+  "<td>" + formatCurrency(result.TDS) + "</td>" +
+  "<td>" + formatCurrency(result.TCS) + "</td>" +
+  "<td>" + formatCurrency(result.BankSettlement) + "</td>" +
+  "<td>" + formatCurrency(result.InputGSTCredit) + "</td>" +
+  "<td>" + formatCurrency(result.IncomeTaxCredit) + "</td>" +
+  "<td><b>" + formatCurrency(result.EffectiveNet) + "</b></td>";
 
     body.appendChild(tr);
   });
