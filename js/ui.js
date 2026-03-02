@@ -1,8 +1,9 @@
-import { calculateSP } from "./engine.js";
+import { calculateSP } from "./engines/engineRouter.js";
 
 let allData = [];
 let filteredData = [];
 let visibleCount = 50;
+let activeMarketplace = "FLIPKART";
 
 function formatCurrency(value){
   return "₹" + Number(value).toLocaleString("en-IN", {
@@ -11,65 +12,43 @@ function formatCurrency(value){
   });
 }
 
-function buildProductURL(row){
-
-  if(!row.fsn) return null;
-
-  if(row.mp === "MYNTRA"){
-    return `https://www.myntra.com/${row.fsn}`;
-  }
-
-  // Default → Flipkart & Shopsy
-  return `https://www.flipkart.com/product/p/itme?pid=${row.fsn}`;
-}
-
-function buildTooltip(row){
-  if(row.mp === "MYNTRA") return "Open on Myntra";
-  return "Open on Flipkart";
-}
-
 export function initUI(data){
   allData = data;
-  populateCategoryFilter();
-  applyFilters();
 
-  document.getElementById("searchInput").addEventListener("input", handleSearch);
+  document.getElementById("tabFlipkart").addEventListener("click", ()=>{
+    activeMarketplace = "FLIPKART";
+    setActiveTab();
+    applyFilters();
+  });
+
+  document.getElementById("tabMyntra").addEventListener("click", ()=>{
+    activeMarketplace = "MYNTRA";
+    setActiveTab();
+    applyFilters();
+  });
+
+  document.getElementById("searchInput").addEventListener("input", applyFilters);
   document.getElementById("categoryFilter").addEventListener("change", applyFilters);
   document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
   document.getElementById("exportBtn").addEventListener("click", exportFullData);
-  document.getElementById("clearSearch").addEventListener("click", clearSearch);
-}
 
-function populateCategoryFilter(){
-  let select = document.getElementById("categoryFilter");
-  let categories = [...new Set(allData.map(d => d.cat))];
-
-  categories.forEach(cat=>{
-    let opt = document.createElement("option");
-    opt.value = cat;
-    opt.innerText = cat;
-    select.appendChild(opt);
-  });
-}
-
-function handleSearch(e){
-  let clearBtn = document.getElementById("clearSearch");
-  clearBtn.style.display = e.target.value ? "block" : "none";
+  setActiveTab();
   applyFilters();
 }
 
-function clearSearch(){
-  document.getElementById("searchInput").value = "";
-  document.getElementById("clearSearch").style.display = "none";
-  applyFilters();
+function setActiveTab(){
+  document.getElementById("tabFlipkart").classList.toggle("active", activeMarketplace==="FLIPKART");
+  document.getElementById("tabMyntra").classList.toggle("active", activeMarketplace==="MYNTRA");
 }
 
 function applyFilters(){
+
   let search = document.getElementById("searchInput").value.toLowerCase();
   let category = document.getElementById("categoryFilter").value;
 
   filteredData = allData.filter(row=>{
-    return row.sku.toLowerCase().includes(search) &&
+    return row.mp === activeMarketplace &&
+      row.sku.toLowerCase().includes(search) &&
       (category==="all" || row.cat===category);
   });
 
@@ -85,52 +64,22 @@ function loadMore(){
 }
 
 function renderTable(){
+
   let body = document.getElementById("tableBody");
   body.innerHTML = "";
 
   filteredData.slice(0, visibleCount).forEach(row=>{
 
-    let result = calculateSP(row.cat, row.simTP);
-
-    let GSTonFees =
-      result.CommissionGST +
-      result.CollectionGST +
-      result.FixedGST;
-
-    let productURL = buildProductURL(row);
-    let tooltip = buildTooltip(row);
-
-    let skuCell = productURL
-      ? `
-        <div class="sku-cell">
-          <span>${row.sku}</span>
-          <a href="${productURL}" target="_blank" 
-             class="sku-link-icon"
-             title="${tooltip}">
-             🔗
-          </a>
-        </div>
-      `
-      : row.sku;
+    let result = calculateSP(row.cat, row.simTP, row.mp);
 
     let tr = document.createElement("tr");
-    tr.className = result.EffectiveNet >= row.simTP ? "safe" : "unsafe";
 
     tr.innerHTML = `
-      <td>${skuCell}</td>
+      <td>${row.sku}</td>
       <td>${row.cat}</td>
       <td>${formatCurrency(row.simTP)}</td>
       <td>${formatCurrency(result.SP)}</td>
-      <td>${formatCurrency(result.Commission)}</td>
-      <td>${formatCurrency(result.Collection)}</td>
-      <td>${formatCurrency(result.Fixed)}</td>
-      <td>${formatCurrency(GSTonFees)}</td>
-      <td>${formatCurrency(result.TDS)}</td>
-      <td>${formatCurrency(result.TCS)}</td>
-      <td>${formatCurrency(result.BankSettlement)}</td>
-      <td>${formatCurrency(result.InputGSTCredit)}</td>
-      <td>${formatCurrency(result.IncomeTaxCredit)}</td>
-      <td><b>${formatCurrency(result.EffectiveNet)}</b></td>
+      <td>${formatCurrency(result.EffectiveNet)}</td>
     `;
 
     body.appendChild(tr);
@@ -142,54 +91,22 @@ function updateSummary(){
   let showing = Math.min(visibleCount, total);
 
   document.getElementById("summaryBar").innerText =
-    `Total: ${total} | Showing: ${showing}`;
+    `${activeMarketplace} | Total: ${total} | Showing: ${showing}`;
 }
-
-/* ---------------- EXPORT FULL FILTERED DATA ---------------- */
 
 function exportFullData(){
 
   let csv = [];
-
-  csv.push([
-    "SKU",
-    "Category",
-    "TP",
-    "SP",
-    "Commission",
-    "Collection",
-    "Fixed Fee",
-    "GST on Fees",
-    "TDS",
-    "TCS",
-    "Bank Settlement",
-    "Input GST Credit (GST + TCS)",
-    "Income Tax Credit (TDS)",
-    "Effective Net"
-  ].join(","));
+  csv.push(["SKU","Category","TP","SP","Effective Net"].join(","));
 
   filteredData.forEach(row=>{
-    let result = calculateSP(row.cat, row.simTP);
-
-    let GSTonFees =
-      result.CommissionGST +
-      result.CollectionGST +
-      result.FixedGST;
+    let result = calculateSP(row.cat, row.simTP, row.mp);
 
     csv.push([
       row.sku,
       row.cat,
       row.simTP,
       result.SP.toFixed(2),
-      result.Commission.toFixed(2),
-      result.Collection.toFixed(2),
-      result.Fixed.toFixed(2),
-      GSTonFees.toFixed(2),
-      result.TDS.toFixed(2),
-      result.TCS.toFixed(2),
-      result.BankSettlement.toFixed(2),
-      result.InputGSTCredit.toFixed(2),
-      result.IncomeTaxCredit.toFixed(2),
       result.EffectiveNet.toFixed(2)
     ].join(","));
   });
@@ -198,6 +115,6 @@ function exportFullData(){
   let url = URL.createObjectURL(blob);
   let a = document.createElement("a");
   a.href = url;
-  a.download = "pricing_full_export.csv";
+  a.download = `${activeMarketplace.toLowerCase()}_pricing_export.csv`;
   a.click();
 }
