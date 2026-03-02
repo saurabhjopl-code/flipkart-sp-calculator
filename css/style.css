@@ -23,10 +23,6 @@ body {
   gap: 12px;
 }
 
-.logo {
-  font-size: 20px;
-}
-
 .title {
   font-size: 18px;
   font-weight: 600;
@@ -34,7 +30,6 @@ body {
 
 .app-logo {
   height: 32px;
-  width: auto;
 }
 
 button {
@@ -50,27 +45,6 @@ button {
   font-weight: 600;
 }
 
-/* ---------------- PROGRESS BAR ---------------- */
-
-.progress-container {
-  width: 100%;
-  background: #ddd;
-  height: 6px;
-}
-
-#progressBar {
-  width: 0%;
-  height: 6px;
-  background: #111;
-  transition: width 0.2s;
-}
-
-.progress-text {
-  text-align: center;
-  font-size: 12px;
-  padding: 4px;
-}
-
 /* ---------------- FILTER BAR ---------------- */
 
 .filter-bar {
@@ -79,16 +53,35 @@ button {
   padding: 15px 25px;
   background: white;
   border-bottom: 1px solid #ddd;
+  align-items: center;
 }
 
-.filter-bar input,
-.filter-bar select {
-  padding: 8px;
+.search-wrapper {
+  position: relative;
+}
+
+.search-wrapper input {
+  padding: 8px 30px 8px 8px;
   width: 250px;
   font-size: 13px;
 }
 
-/* ---------------- SUMMARY BAR ---------------- */
+.clear-search {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 14px;
+  color: #888;
+  display: none;
+}
+
+.clear-search:hover {
+  color: #000;
+}
+
+/* ---------------- SUMMARY ---------------- */
 
 .summary-bar {
   padding: 10px 25px;
@@ -101,22 +94,22 @@ button {
 
 .table-container {
   padding: 20px;
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 70vh;
 }
 
-/* Main Pricing Table */
 .pricing-table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  min-width: 1200px; /* prevents column crush */
+  min-width: 1200px;
 }
 
 .pricing-table th,
 .pricing-table td {
   padding: 8px;
   border: 1px solid #ddd;
-  text-align: center;
+  text-align: center; /* ALL CENTER */
   font-size: 12px;
 }
 
@@ -125,13 +118,7 @@ button {
   color: white;
   position: sticky;
   top: 0;
-  z-index: 2;
-  font-weight: 600;
-}
-
-/* Numeric columns alignment */
-.pricing-table td:nth-child(n+3) {
-  text-align: right;
+  z-index: 10;
 }
 
 /* ---------------- ROW STATES ---------------- */
@@ -144,31 +131,11 @@ button {
   background: #ffebee;
 }
 
-/* ---------------- LOAD MORE BUTTON ---------------- */
+/* ---------------- LOAD MORE ---------------- */
 
 .load-more {
   display: block;
   margin: 20px auto;
   background: #111;
   color: white;
-}
-
-/* ---------------- EXPAND SUPPORT (Future Safe) ---------------- */
-
-.expand-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.breakdown-row td {
-  background: #fafafa;
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
-}
-
-.breakdown-box {
-  line-height: 1.7;
-  font-size: 13px;
 }
