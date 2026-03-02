@@ -1,4 +1,4 @@
-import { calculateFlipkartSP } from "./flipkartEngine.js";
+import { calculateSP as calculateFlipkartSP } from "./flipkartEngine.js";
 import { calculateMyntraSP } from "./myntraEngine.js";
 
 export function calculateSP(category, TP, mp, brand){
