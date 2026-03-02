@@ -46,7 +46,7 @@ function loadMore(){
   renderTable();
 }
 
-function format₹(num){
+function formatCurrency(num){
   return "₹" + Number(num).toFixed(2);
 }
 
