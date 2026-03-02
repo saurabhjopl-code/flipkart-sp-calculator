@@ -1,120 +1,101 @@
-import { calculateSP } from "./engines/engineRouter.js";
+import { calculateSP } from "./engineRouter.js";
 
 let allData = [];
 let filteredData = [];
 let visibleCount = 50;
-let activeMarketplace = "FLIPKART";
-
-function formatCurrency(value){
-  return "₹" + Number(value).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
 
 export function initUI(data){
   allData = data;
-
-  document.getElementById("tabFlipkart").addEventListener("click", ()=>{
-    activeMarketplace = "FLIPKART";
-    setActiveTab();
-    applyFilters();
-  });
-
-  document.getElementById("tabMyntra").addEventListener("click", ()=>{
-    activeMarketplace = "MYNTRA";
-    setActiveTab();
-    applyFilters();
-  });
-
-  document.getElementById("searchInput").addEventListener("input", applyFilters);
-  document.getElementById("categoryFilter").addEventListener("change", applyFilters);
-  document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
-  document.getElementById("exportBtn").addEventListener("click", exportFullData);
-
-  setActiveTab();
   applyFilters();
+
+  document.getElementById("searchInput")
+    .addEventListener("input", handleSearch);
+
+  document.getElementById("categoryFilter")
+    .addEventListener("change", applyFilters);
+
+  document.getElementById("loadMoreBtn")
+    .addEventListener("click", loadMore);
 }
 
-function setActiveTab(){
-  document.getElementById("tabFlipkart").classList.toggle("active", activeMarketplace==="FLIPKART");
-  document.getElementById("tabMyntra").classList.toggle("active", activeMarketplace==="MYNTRA");
+/* ================= FILTERING ================= */
+
+function handleSearch(e){
+  applyFilters();
 }
 
 function applyFilters(){
 
-  let search = document.getElementById("searchInput").value.toLowerCase();
-  let category = document.getElementById("categoryFilter").value;
+  const search =
+    document.getElementById("searchInput")
+      .value.toLowerCase();
 
-  filteredData = allData.filter(row=>{
-    return row.mp === activeMarketplace &&
-      row.sku.toLowerCase().includes(search) &&
-      (category==="all" || row.cat===category);
-  });
+  filteredData = allData.filter(row =>
+    row.sku.toLowerCase().includes(search)
+  );
 
   visibleCount = 50;
   renderTable();
   updateSummary();
 }
 
+/* ================= TABLE ================= */
+
 function loadMore(){
   visibleCount += 50;
   renderTable();
-  updateSummary();
+}
+
+function format₹(num){
+  return "₹" + Number(num).toFixed(2);
 }
 
 function renderTable(){
 
-  let body = document.getElementById("tableBody");
+  const body = document.getElementById("tableBody");
   body.innerHTML = "";
 
-  filteredData.slice(0, visibleCount).forEach(row=>{
+  filteredData.slice(0, visibleCount).forEach(row => {
 
-    let result = calculateSP(row.cat, row.simTP, row.mp, row.brand);
+    const result =
+      calculateSP(
+        row.cat,
+        row.simTP,
+        row.mp,
+        row.brand
+      );
 
-    let tr = document.createElement("tr");
+    const GSTonFees =
+      result.CommissionGST +
+      result.CollectionGST +
+      result.FixedGST;
+
+    const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td>${row.sku}</td>
       <td>${row.cat}</td>
-      <td>${formatCurrency(row.simTP)}</td>
-      <td>${formatCurrency(result.SP)}</td>
-      <td>${formatCurrency(result.EffectiveNet)}</td>
+      <td>${format₹(row.simTP)}</td>
+      <td>${format₹(result.SP)}</td>
+      <td>${format₹(result.Commission)}</td>
+      <td>${format₹(result.Collection)}</td>
+      <td>${format₹(result.Fixed)}</td>
+      <td>${format₹(GSTonFees)}</td>
+      <td>${format₹(result.TDS)}</td>
+      <td>${format₹(result.TCS)}</td>
+      <td>${format₹(result.BankSettlement)}</td>
+      <td>${format₹(result.InputGSTCredit)}</td>
+      <td>${format₹(result.IncomeTaxCredit)}</td>
+      <td><b>${format₹(result.EffectiveNet)}</b></td>
     `;
 
     body.appendChild(tr);
   });
 }
 
+/* ================= SUMMARY ================= */
+
 function updateSummary(){
-  let total = filteredData.length;
-  let showing = Math.min(visibleCount, total);
-
   document.getElementById("summaryBar").innerText =
-    `${activeMarketplace} | Total: ${total} | Showing: ${showing}`;
-}
-
-function exportFullData(){
-
-  let csv = [];
-  csv.push(["SKU","Category","TP","SP","Effective Net"].join(","));
-
-  filteredData.forEach(row=>{
-    let result = calculateSP(row.cat, row.simTP, row.mp);
-
-    csv.push([
-      row.sku,
-      row.cat,
-      row.simTP,
-      result.SP.toFixed(2),
-      result.EffectiveNet.toFixed(2)
-    ].join(","));
-  });
-
-  let blob = new Blob([csv.join("\n")], { type: "text/csv" });
-  let url = URL.createObjectURL(blob);
-  let a = document.createElement("a");
-  a.href = url;
-  a.download = `${activeMarketplace.toLowerCase()}_pricing_export.csv`;
-  a.click();
+    `Total: ${filteredData.length} | Showing: ${Math.min(visibleCount, filteredData.length)}`;
 }
