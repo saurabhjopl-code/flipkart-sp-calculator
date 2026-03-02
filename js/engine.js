@@ -70,7 +70,7 @@ if(!category || !TP || TP<=0){
 return null;
 }
 
-// Reverse Solve SellerPrice protecting Effective Net ≥ TP
+// -------- Reverse Solve SellerPrice --------
 let SellerPrice = TP + 200;
 
 for(let i=0;i<20;i++){
@@ -88,7 +88,7 @@ if(Math.abs(newSellerPrice - SellerPrice) < 0.5) break;
 SellerPrice = newSellerPrice;
 }
 
-// Recalculate with final SellerPrice
+// -------- Final Fee Calculation --------
 let commissionRate = getSlabValue(commissionTable, category, SellerPrice);
 let collectionRate = getCollection(SellerPrice);
 
@@ -105,10 +105,9 @@ let FixedGST = Fixed * 0.18;
 let TDS = SellerPrice * 0.01;
 let TCS = SellerPrice * 0.01;
 
-// GTA depends on BasePrice, but we approximate using SellerPrice + slab iteration
-let BasePrice = SellerPrice;
-let GTA = getSlabValue(gtaTable, category, BasePrice);
-BasePrice = SellerPrice + GTA;
+// GTA (iterate once to stabilize slab)
+let GTA = getSlabValue(gtaTable, category, SellerPrice + 100);
+let BasePrice = SellerPrice + GTA;
 
 // Product GST
 let productGSTRate = getProductGST(TP);
@@ -127,7 +126,7 @@ SellerPrice
 - TDS
 - TCS;
 
-// Recoverable Credits
+// Credits
 let InputGSTCredit =
 CommissionGST
 + CollectionGST
@@ -166,7 +165,7 @@ IncomeTaxCredit,
 
 EffectiveNet,
 ProductGST,
-ProductGSTRate
+productGSTRate
 };
 
 }
