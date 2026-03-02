@@ -202,3 +202,33 @@ table {
 .table-container {
   overflow-x: auto;
 }
+
+/* ===== Marketplace Tabs ===== */
+
+.marketplace-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 25px;
+  background: #f4f6f9;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-btn {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: #f0f0f0;
+}
+
+.tab-btn.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
