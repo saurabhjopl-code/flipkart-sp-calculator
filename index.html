@@ -3,150 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <title>Flipkart Reverse SP Engine</title>
-<style>
-body { font-family: Arial; padding:20px; background:#f4f6f9; }
-h2 { margin-bottom:10px; }
-input { width:70%; padding:10px; }
-button { padding:10px 20px; cursor:pointer; background:#111; color:white; border:none; }
-table { width:100%; border-collapse: collapse; margin-top:20px; background:white; font-size:13px;}
-th, td { padding:8px; border:1px solid #ddd; text-align:center; }
-th { background:#000; color:white; position:sticky; top:0; }
-.good { background:#e8f5e9; }
-.bad { background:#ffebee; }
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<h2>Flipkart Reverse SP Calculator</h2>
+<header class="app-header">
+  <div class="logo">🟡</div>
+  <div class="title">Flipkart Reverse SP Engine</div>
+  <button id="exportBtn">Export CSV</button>
+</header>
 
-<input type="text" id="sheetUrl"
-value="https://docs.google.com/spreadsheets/d/e/2PACX-1vR-yEqk-MG6suolRPrWfm4ROxjepofRKJM93s9wgGuB_PPgqykpwWiOEOP_tT4ver5a-tCyFGw4q5Qf/pub?gid=923242779&single=true&output=csv">
-<button onclick="loadSheet()">Load Data</button>
+<div class="progress-container">
+  <div id="progressBar"></div>
+</div>
+<div id="progressText" class="progress-text">Loading 0%</div>
 
-<div id="output"></div>
+<div class="filter-bar">
+  <input type="text" id="searchInput" placeholder="Search SKU / Partial SKU">
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+  </select>
+</div>
 
-<script>
+<div class="summary-bar" id="summaryBar">
+  Total: 0 | Safe: 0 | Avg SP: 0
+</div>
 
-// ---------- CATEGORY NORMALIZER ----------
-function normalizeCategory(cat){
-cat = cat.toLowerCase().trim();
-if(cat==="dress") return "Dress";
-if(cat==="ethnic_set") return "Ethnic Sets";
-if(cat==="salwar_kurta_dupatta") return "Salwar Kurta Dupatta";
-if(cat==="kurta") return "Kurta";
-if(cat==="tops" || cat==="top") return "Tops";
-if(cat==="fabric") return "Fabric";
-if(cat==="sari") return "Sari";
-return null;
-}
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th>
+        <th>Category</th>
+        <th>TP</th>
+        <th>SP</th>
+        <th>Settlement</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
 
-// ---------- TABLES ----------
-const commissionTable = {
-"Ethnic Sets":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.14}],
-"Kurta":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.09}],
-"Dress":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.18}],
-"Tops":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.17}],
-"Salwar Kurta Dupatta":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.14}],
-"Fabric":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.09}],
-"Sari":[{min:0,max:1000,fee:0},{min:1001,max:999999,fee:0.14}]
-};
+<button id="loadMoreBtn" class="load-more">Load More</button>
 
-const collectionTable = [
-{min:0,max:1199,fee:0},
-{min:1200,max:2000,fee:0.005},
-{min:2001,max:4000,fee:0.004},
-{min:4001,max:8000,fee:0.003}
-];
-
-const gtaTable = {
-"Fabric":[{min:0,max:300,fee:75},{min:300,max:500,fee:78},{min:500,max:1000,fee:157},{min:1000,max:999999,fee:232}],
-"Kurta":[{min:0,max:300,fee:70},{min:300,max:500,fee:77},{min:500,max:1000,fee:136},{min:1000,max:999999,fee:219}],
-"Ethnic Sets":[{min:0,max:300,fee:74},{min:300,max:500,fee:79},{min:500,max:1000,fee:123},{min:1000,max:999999,fee:146}],
-"Sari":[{min:0,max:300,fee:68},{min:300,max:500,fee:80},{min:500,max:1000,fee:157},{min:1000,max:999999,fee:254}],
-"Tops":[{min:0,max:300,fee:73},{min:300,max:500,fee:88},{min:500,max:1000,fee:130},{min:1000,max:999999,fee:186}],
-"Dress":[{min:0,max:300,fee:84},{min:300,max:500,fee:86},{min:500,max:1000,fee:122},{min:1000,max:999999,fee:168}],
-"Salwar Kurta Dupatta":[{min:0,max:300,fee:75},{min:300,max:500,fee:77},{min:500,max:1000,fee:119},{min:1000,max:999999,fee:139}]
-};
-
-// ---------- HELPERS ----------
-function getSlabValue(table, category, value){
-for(let slab of table[category]){
-if(value>=slab.min && value<=slab.max) return slab.fee;
-}
-return 0;
-}
-
-function getCollection(value){
-for(let slab of collectionTable){
-if(value>=slab.min && value<=slab.max) return slab.fee;
-}
-return 0;
-}
-
-// ---------- CORE ENGINE ----------
-function calculateSP(category, TP){
-
-let SP = TP + 300;
-
-for(let i=0;i<15;i++){
-
-let gta = getSlabValue(gtaTable, category, SP);
-let sellerPrice = SP - gta;
-
-let commission = getSlabValue(commissionTable, category, sellerPrice);
-let collection = getCollection(sellerPrice);
-
-let newSellerPrice = (TP + 5) / (1 - commission - collection);
-let newSP = Math.ceil(newSellerPrice + gta);
-
-if(Math.abs(newSP - SP) < 1) break;
-SP = newSP;
-}
-
-let gta = getSlabValue(gtaTable, category, SP);
-let sellerPrice = SP - gta;
-let commission = getSlabValue(commissionTable, category, sellerPrice);
-let collection = getCollection(sellerPrice);
-let settlement = sellerPrice*(1-commission-collection)-5;
-
-return {SP,gta,sellerPrice,commission,collection,settlement};
-}
-
-// ---------- LOAD ----------
-async function loadSheet(){
-
-let url = document.getElementById("sheetUrl").value;
-let res = await fetch(url);
-let text = await res.text();
-let rows = text.split("\n").map(r=>r.split(","));
-
-let html="<table>";
-html+="<tr><th>SKU</th><th>Category</th><th>TP</th><th>SP</th><th>Settlement</th></tr>";
-
-for(let i=1;i<rows.length;i++){
-
-let sku=rows[i][0];
-let cat=normalizeCategory(rows[i][1]);
-let TP=parseFloat(rows[i][2]);
-
-if(!sku||!cat||!TP) continue;
-
-let r=calculateSP(cat,TP);
-let status=r.settlement>=TP?"good":"bad";
-
-html+=`<tr class="${status}">
-<td>${sku}</td>
-<td>${cat}</td>
-<td>${TP}</td>
-<td>${r.SP}</td>
-<td>${r.settlement.toFixed(2)}</td>
-</tr>`;
-}
-
-html+="</table>";
-document.getElementById("output").innerHTML=html;
-}
-
-</script>
+<script src="js/app.js"></script>
 </body>
 </html>
