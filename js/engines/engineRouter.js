@@ -1,12 +1,22 @@
-import { calculateFlipkartSP } from "./flipkartEngine.js";
-import { calculateMyntraSP } from "./myntraEngine.js";
+export function calculateMyntraSP(category, TP){
 
-export function calculateSP(category, TP, mp){
+  // TODO: Add Myntra fee structure
 
-  if(mp === "MYNTRA"){
-    return calculateMyntraSP(category, TP);
-  }
+  let SP = TP * 1.3; // temporary logic
 
-  // FLIPKART + SHOPSY handled in same engine
-  return calculateFlipkartSP(category, TP);
+  return {
+    SP,
+    Commission: 0,
+    Collection: 0,
+    Fixed: 0,
+    CommissionGST: 0,
+    CollectionGST: 0,
+    FixedGST: 0,
+    TDS: 0,
+    TCS: 0,
+    BankSettlement: TP,
+    InputGSTCredit: 0,
+    IncomeTaxCredit: 0,
+    EffectiveNet: TP
+  };
 }
