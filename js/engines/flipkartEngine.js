@@ -1,130 +1,90 @@
-/* ==========================================
-   FLIPKART / SHOPSY ENGINE – DYNAMIC
-========================================== */
+let commissionTable = [];
+let fixedTable = [];
+let collectionTable = [];
+let gtaTable = [];
 
-let commissionTable;
-let fixedTable;
-let collectionTable;
-let gtaTable;
-
-const GST_RATE = 0.18;
-const TDS_RATE = 0.01;
-const TCS_RATE = 0.01;
-
-export function initFlipkartTables(data){
-  commissionTable = data.fkCommission;
-  fixedTable = data.fkFixed;
-  collectionTable = data.fkCollection;
-  gtaTable = data.fkGTA;
+export function initFlipkartTables(data) {
+  commissionTable = data.fkCommission || [];
+  fixedTable = data.fkFixed || [];
+  collectionTable = data.fkCollection || [];
+  gtaTable = data.fkGTA || [];
 }
 
-function getSlab(slabs, value){
-  if(!slabs) return 0;
-  for(let s of slabs){
-    if(value >= s.min && value <= s.max){
-      return s.fee ?? s.rate ?? 0;
-    }
-  }
-  return 0;
+function findSlab(table, category, price) {
+  return table.find(r =>
+    r.category === category &&
+    price >= Number(r["lower limit"]) &&
+    price <= Number(r["upper limit"])
+  );
 }
 
-export function calculateSP(category, TP){
+function getGTA(category, price) {
+  const slab = gtaTable.find(r =>
+    r.Category === category &&
+    price >= Number(r["lower limit"]) &&
+    price <= Number(r["upper limit"])
+  );
+  return slab ? Number(slab.fees) : 0;
+}
 
-  let SP = TP + 300;
+export function calculateFlipkart(category, TP) {
 
-  for(let i=0;i<20;i++){
+  let SP = TP;
+  let GTA = 0;
+  let Commission = 0;
+  let Fixed = 0;
+  let Collection = 0;
 
-    const gta = getSlab(gtaTable[category], SP);
+  for (let i = 0; i < 20; i++) {
 
-    const sellerPrice = SP - gta;
+    GTA = getGTA(category, SP);
+    const sellerPrice = SP - GTA;
 
-    const commissionRate =
-      getSlab(commissionTable[category], sellerPrice);
+    const commSlab = findSlab(commissionTable, category, sellerPrice);
+    const fixedSlab = findSlab(fixedTable, category, sellerPrice);
+    const collSlab = findSlab(collectionTable, category, sellerPrice);
 
-    const collectionRate =
-      getSlab(collectionTable[category], sellerPrice);
+    Commission = commSlab ? sellerPrice * (parseFloat(commSlab.fee) / 100) : 0;
+    Fixed = fixedSlab ? Number(fixedSlab.fee) : 0;
+    Collection = collSlab ? sellerPrice * (parseFloat(collSlab.fee) / 100) : 0;
 
-    const commission = sellerPrice * commissionRate;
-    const collection = sellerPrice * collectionRate;
-    const fixed =
-      getSlab(fixedTable[category], sellerPrice);
+    const GST = 0.18 * (Commission + Fixed + Collection);
+    const TDS = sellerPrice * 0.01;
+    const TCS = sellerPrice * 0.01;
 
-    const gstFees =
-      (commission + collection + fixed) * GST_RATE;
+    const Net =
+      sellerPrice -
+      Commission -
+      Fixed -
+      Collection -
+      GST -
+      TDS -
+      TCS +
+      (GST + TCS) +
+      TDS;
 
-    const tds = sellerPrice * TDS_RATE;
-    const tcs = sellerPrice * TCS_RATE;
-
-    const bankSettlement =
-      sellerPrice
-      - commission
-      - collection
-      - fixed
-      - gstFees
-      - tds
-      - tcs;
-
-    const effectiveNet =
-      bankSettlement
-      + gstFees
-      + tcs
-      + tds;
-
-    if(Math.abs(effectiveNet - TP) < 1) break;
-
-    SP += (TP - effectiveNet);
+    SP += (TP - Net);
   }
 
-  /* Final compute */
-
-  const gta = getSlab(gtaTable[category], SP);
-  const sellerPrice = SP - gta;
-
-  const commissionRate =
-    getSlab(commissionTable[category], sellerPrice);
-
-  const collectionRate =
-    getSlab(collectionTable[category], sellerPrice);
-
-  const commission = sellerPrice * commissionRate;
-  const collection = sellerPrice * collectionRate;
-  const fixed =
-    getSlab(fixedTable[category], sellerPrice);
-
-  const gstFees =
-    (commission + collection + fixed) * GST_RATE;
-
-  const tds = sellerPrice * TDS_RATE;
-  const tcs = sellerPrice * TCS_RATE;
-
-  const bankSettlement =
-    sellerPrice
-    - commission
-    - collection
-    - fixed
-    - gstFees
-    - tds
-    - tcs;
-
-  const effectiveNet =
-    bankSettlement
-    + gstFees
-    + tcs
-    + tds;
+  const sellerPrice = SP - GTA;
+  const GST = 0.18 * (Commission + Fixed + Collection);
+  const TDS = sellerPrice * 0.01;
+  const TCS = sellerPrice * 0.01;
 
   return {
     SP,
-    Commission: commission,
-    Collection: collection,
-    Fixed: fixed,
-    CommissionGST: commission * GST_RATE,
-    CollectionGST: collection * GST_RATE,
-    FixedGST: fixed * GST_RATE,
-    TDS: tds,
-    TCS: tcs,
-    BankSettlement: bankSettlement,
-    InputGSTCredit: gstFees + tcs,
-    IncomeTaxCredit: tds,
-    EffectiveNet: effectiveNet
+    GTA,
+    Commission,
+    Collection,
+    Fixed,
+    CommissionGST: Commission * 0.18,
+    CollectionGST: Collection * 0.18,
+    FixedGST: Fixed * 0.18,
+    TDS,
+    TCS,
+    BankSettlement: sellerPrice - Commission - Fixed - Collection - GST - TDS - TCS,
+    InputGSTCredit: GST + TCS,
+    IncomeTaxCredit: TDS,
+    EffectiveNet: TP
   };
 }
