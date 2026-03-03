@@ -39,28 +39,33 @@
   <button id="calculatorTab" class="tab-btn">Calculator</button>
 </div>
   
-  <div id="calculatorSection" style="display:none; padding:25px; background:white; margin:20px;">
-  
-  <h3>Online Pricing Calculator</h3>
+  <div id="calculatorSection" style="display:none; padding:25px; background:white; margin:20px; border:1px solid #ddd;">
 
-  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:15px;">
+  <h3 style="margin-bottom:20px;">Online Pricing Calculator</h3>
 
-    <select id="calcMP">
-      <option value="FLIPKART">Flipkart</option>
-      <option value="MYNTRA">Myntra</option>
-    </select>
+  <!-- MP Toggle -->
+  <div style="display:flex; gap:10px; margin-bottom:20px;">
+    <button id="calcFKBtn" class="tab-btn active">Flipkart</button>
+    <button id="calcMYBtn" class="tab-btn">Myntra</button>
+  </div>
 
-    <select id="calcCategory"></select>
+  <!-- Inputs -->
+  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
 
-    <select id="calcBrand" style="display:none;"></select>
+    <select id="calcCategory" class="calc-input"></select>
 
-    <input type="number" id="calcTP" placeholder="Enter TP" />
+    <select id="calcBrand" class="calc-input" style="display:none;"></select>
 
-    <button id="calcBtn">Calculate</button>
+    <input type="number" id="calcTP" class="calc-input" placeholder="Enter TP" />
+
+    <button id="calcBtn" class="tab-btn">Calculate</button>
 
   </div>
 
-  <div id="calcResult" style="margin-top:20px; font-weight:600;"></div>
+  <!-- Result Card -->
+  <div id="calcResultCard" style="display:none; border:1px solid #eee; padding:20px; background:#fafafa;">
+    <div id="calcResult"></div>
+  </div>
 
 </div>
   
