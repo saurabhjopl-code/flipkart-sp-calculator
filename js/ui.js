@@ -55,19 +55,37 @@ function setupTabs() {
 
   const fkBtn = document.getElementById("flipkartTab");
   const myBtn = document.getElementById("myntraTab");
+  const calcBtn = document.getElementById("calculatorTab");
+
+  const calcSection = document.getElementById("calculatorSection");
+  const tableContainer = document.querySelector(".table-container");
 
   fkBtn.onclick = () => {
+
     activeMP = "FLIPKART";
+
     fkBtn.classList.add("active");
     myBtn.classList.remove("active");
+    calcBtn.classList.remove("active");
+
+    calcSection.style.display = "none";
+    tableContainer.style.display = "block";   // ✅ restore table
+
     populateCategoryFilter();
     applyFilters();
   };
 
   myBtn.onclick = () => {
+
     activeMP = "MYNTRA";
+
     myBtn.classList.add("active");
     fkBtn.classList.remove("active");
+    calcBtn.classList.remove("active");
+
+    calcSection.style.display = "none";
+    tableContainer.style.display = "block";   // ✅ restore table
+
     populateCategoryFilter();
     applyFilters();
   };
