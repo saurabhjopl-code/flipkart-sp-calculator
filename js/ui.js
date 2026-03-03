@@ -289,7 +289,7 @@ function exportFullData() {
   a.click();
 }
 
-/* ================= POLISHED CALCULATOR ================= */
+/* ================= ADVANCED CALCULATOR V4.1 ================= */
 
 function setupCalculator() {
 
@@ -303,12 +303,12 @@ function setupCalculator() {
   const categorySelect = document.getElementById("calcCategory");
   const brandSelect = document.getElementById("calcBrand");
   const tpInput = document.getElementById("calcTP");
-  const resultDiv = document.getElementById("calcResult");
+  const discountInput = document.getElementById("calcDiscount");
   const resultCard = document.getElementById("calcResultCard");
 
   let calcMP = "FLIPKART";
 
-  /* TAB CLICK */
+  /* OPEN CALCULATOR */
   calcTab.onclick = () => {
     calcSection.style.display = "block";
     tableContainer.style.display = "none";
@@ -335,17 +335,11 @@ function setupCalculator() {
   };
 
   function populateCategories() {
-
     const categories = [
-      ...new Set(
-        allSKU
-          .filter(d => d.mp === calcMP)
-          .map(d => d.cat)
-      )
+      ...new Set(allSKU.filter(d => d.mp === calcMP).map(d => d.cat))
     ];
 
     categorySelect.innerHTML = "";
-
     categories.forEach(cat => {
       const opt = document.createElement("option");
       opt.value = cat;
@@ -357,7 +351,6 @@ function setupCalculator() {
   }
 
   function populateBrands() {
-
     if (calcMP !== "MYNTRA") return;
 
     const brands = [
@@ -369,7 +362,6 @@ function setupCalculator() {
     ];
 
     brandSelect.innerHTML = "";
-
     brands.forEach(b => {
       const opt = document.createElement("option");
       opt.value = b;
@@ -383,34 +375,109 @@ function setupCalculator() {
   document.getElementById("calcBtn").onclick = () => {
 
     const TP = parseFloat(tpInput.value);
+    const discount = parseFloat(discountInput.value) || 0;
+
     if (!TP) return;
 
-    const tempRow = {
+    const baseRow = {
       cat: categorySelect.value,
       simTP: TP,
       mp: calcMP,
       brand: brandSelect.value
     };
 
-    const result = calculateSP(tempRow, masterData);
+    const base = calculateSP(baseRow, masterData);
+
+    let discountResult = null;
+
+    if (discount > 0) {
+      const discountedTP = TP * (1 - discount / 100);
+
+      const discountRow = {
+        cat: categorySelect.value,
+        simTP: discountedTP,
+        mp: calcMP,
+        brand: brandSelect.value
+      };
+
+      discountResult = calculateSP(discountRow, masterData);
+    }
+
+    renderComparison(base, discountResult);
+  };
+
+  function renderComparison(base, discountResult) {
 
     resultCard.style.display = "block";
 
-    resultDiv.innerHTML = `
-      <div><b>SP:</b> ₹${result.SP.toFixed(2)}</div>
-      <div><b>GTA:</b> ₹${result.GTA.toFixed(2)}</div>
-      ${calcMP === "MYNTRA" ? `<div><b>Level:</b> ${result.Level || "-"}</div>` : ""}
-      <div><b>Commission:</b> ₹${result.Commission.toFixed(2)}</div>
-      <div><b>Fixed Fee:</b> ₹${result.Fixed.toFixed(2)}</div>
-      <div><b>Collection Fee:</b> ₹${result.Collection.toFixed(2)}</div>
-      <div><b>Input GST:</b> ₹${result.InputGSTCredit.toFixed(2)}</div>
-      <div><b>TDS:</b> ₹${result.TDS.toFixed(2)}</div>
-      <div><b>TCS:</b> ₹${result.TCS.toFixed(2)}</div>
-      <div class="result-highlight"><b>Effective Net:</b> ₹${result.EffectiveNet.toFixed(2)}</div>
-    `;
-  };
+    function row(label, b, d) {
+      if (!discountResult) {
+        return `<tr><td>${label}</td><td>${format(b)}</td></tr>`;
+      }
+
+      const diff = (d - b).toFixed(2);
+
+      return `
+        <tr>
+          <td>${label}</td>
+          <td>${format(b)}</td>
+          <td>${format(d)}</td>
+          <td>${diff}</td>
+        </tr>`;
+    }
+
+    function format(v) {
+      return "₹" + Number(v || 0).toFixed(2);
+    }
+
+    let html = `<table class="calc-table">`;
+
+    if (discountResult) {
+      html += `<tr class="calc-header">
+                 <td>Pricing Details</td>
+                 <td>Base</td>
+                 <td>Discount</td>
+                 <td>Diff</td>
+               </tr>`;
+    } else {
+      html += `<tr class="calc-header">
+                 <td>Pricing Details</td>
+                 <td>Value</td>
+               </tr>`;
+    }
+
+    const sellerBase = base.SP - base.GTA;
+    const sellerDisc = discountResult ? discountResult.SP - discountResult.GTA : null;
+
+    html += row("Seller Price", sellerBase, sellerDisc);
+    html += row("Customer Logistics Fees", base.GTA, discountResult?.GTA);
+
+    html += `<tr class="calc-section"><td colspan="4">MP Fees</td></tr>`;
+
+    html += row("Commission", base.Commission, discountResult?.Commission);
+    html += row("Fixed Fee", base.Fixed, discountResult?.Fixed);
+    html += row("Collection Fee", base.Collection, discountResult?.Collection);
+
+    html += `<tr class="calc-section"><td colspan="4">Taxes</td></tr>`;
+
+    html += row("TCS", base.TCS, discountResult?.TCS);
+    html += row("TDS", base.TDS, discountResult?.TDS);
+    html += row("GST on MP Fees", base.InputGSTCredit, discountResult?.InputGSTCredit);
+
+    html += `<tr class="calc-section"><td colspan="4">Settlement</td></tr>`;
+
+    html += row("Bank Settlement", base.BankSettlement, discountResult?.BankSettlement);
+
+    html += `<tr class="calc-section"><td colspan="4">Summary</td></tr>`;
+
+    html += row("Listing Price", base.SP, discountResult?.SP);
+    html += row("Effective Net", base.EffectiveNet, discountResult?.EffectiveNet);
+
+    html += `</table>`;
+
+    resultCard.innerHTML = html;
+  }
 
   populateCategories();
 }
-
 
