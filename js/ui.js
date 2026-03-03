@@ -406,77 +406,109 @@ function setupCalculator() {
     renderComparison(base, discountResult);
   };
 
-  function renderComparison(base, discountResult) {
+ function renderComparison(base, discountResult) {
 
-    resultCard.style.display = "block";
+  resultCard.style.display = "block";
 
-    function row(label, b, d) {
-      if (!discountResult) {
-        return `<tr><td>${label}</td><td>${format(b)}</td></tr>`;
-      }
+  function format(v){
+    return "₹" + Number(v || 0).toFixed(2);
+  }
 
-      const diff = (d - b).toFixed(2);
+  function diff(b, d){
+    return (Number(d || 0) - Number(b || 0)).toFixed(2);
+  }
 
+  function row(label, b, d){
+    if(!discountResult){
       return `
         <tr>
           <td>${label}</td>
-          <td>${format(b)}</td>
-          <td>${format(d)}</td>
-          <td>${diff}</td>
+          <td class="val">${format(b)}</td>
         </tr>`;
     }
 
-    function format(v) {
-      return "₹" + Number(v || 0).toFixed(2);
-    }
-
-    let html = `<table class="calc-table">`;
-
-    if (discountResult) {
-      html += `<tr class="calc-header">
-                 <td>Pricing Details</td>
-                 <td>Base</td>
-                 <td>Discount</td>
-                 <td>Diff</td>
-               </tr>`;
-    } else {
-      html += `<tr class="calc-header">
-                 <td>Pricing Details</td>
-                 <td>Value</td>
-               </tr>`;
-    }
-
-    const sellerBase = base.SP - base.GTA;
-    const sellerDisc = discountResult ? discountResult.SP - discountResult.GTA : null;
-
-    html += row("Seller Price", sellerBase, sellerDisc);
-    html += row("Customer Logistics Fees", base.GTA, discountResult?.GTA);
-
-    html += `<tr class="calc-section"><td colspan="4">MP Fees</td></tr>`;
-
-    html += row("Commission", base.Commission, discountResult?.Commission);
-    html += row("Fixed Fee", base.Fixed, discountResult?.Fixed);
-    html += row("Collection Fee", base.Collection, discountResult?.Collection);
-
-    html += `<tr class="calc-section"><td colspan="4">Taxes</td></tr>`;
-
-    html += row("TCS", base.TCS, discountResult?.TCS);
-    html += row("TDS", base.TDS, discountResult?.TDS);
-    html += row("GST on MP Fees", base.InputGSTCredit, discountResult?.InputGSTCredit);
-
-    html += `<tr class="calc-section"><td colspan="4">Settlement</td></tr>`;
-
-    html += row("Bank Settlement", base.BankSettlement, discountResult?.BankSettlement);
-
-    html += `<tr class="calc-section"><td colspan="4">Summary</td></tr>`;
-
-    html += row("Listing Price", base.SP, discountResult?.SP);
-    html += row("Effective Net", base.EffectiveNet, discountResult?.EffectiveNet);
-
-    html += `</table>`;
-
-    resultCard.innerHTML = html;
+    return `
+      <tr>
+        <td>${label}</td>
+        <td class="val">${format(b)}</td>
+        <td class="val">${format(d)}</td>
+        <td class="val">${diff(b,d)}</td>
+      </tr>`;
   }
+
+  const sellerBase = base.SP - base.GTA;
+  const sellerDisc = discountResult ? discountResult.SP - discountResult.GTA : null;
+
+  const gstBase =
+    0.18 * ((base.Commission||0)+(base.Collection||0)+(base.Fixed||0));
+
+  const gstDisc = discountResult
+    ? 0.18 * ((discountResult.Commission||0)+(discountResult.Collection||0)+(discountResult.Fixed||0))
+    : null;
+
+  let html = `<table class="calc-table compact">`;
+
+  if(discountResult){
+    html += `
+      <tr class="calc-header">
+        <td>Pricing Details</td>
+        <td>Base</td>
+        <td>Discount</td>
+        <td>Diff</td>
+      </tr>`;
+  }else{
+    html += `
+      <tr class="calc-header">
+        <td>Pricing Details</td>
+        <td>Value</td>
+      </tr>`;
+  }
+
+  /* ===== TOP ===== */
+
+  html += row("Seller Price", sellerBase, sellerDisc);
+  html += row("Customer Logistics Fees (GTA)", base.GTA, discountResult?.GTA);
+
+  /* ===== MP FEES ===== */
+
+  html += `<tr class="section"><td colspan="4">MP Fees</td></tr>`;
+
+  html += row("Commission", base.Commission, discountResult?.Commission);
+  html += row("Fixed Fee", base.Fixed, discountResult?.Fixed);
+  html += row("Collection Fee", base.Collection, discountResult?.Collection);
+
+  /* ===== TAXES ===== */
+
+  html += `<tr class="section"><td colspan="4">Taxes</td></tr>`;
+
+  html += row("TCS", base.TCS, discountResult?.TCS);
+  html += row("TDS", base.TDS, discountResult?.TDS);
+  html += row("GST on MP Fees @18%", gstBase, gstDisc);
+
+  /* ===== BANK SETTLEMENT ===== */
+
+  html += `<tr class="section"><td colspan="4">Bank Settlement</td></tr>`;
+  html += row("Bank Settlement", base.BankSettlement, discountResult?.BankSettlement);
+
+  /* ===== INPUT GST CREDITS ===== */
+
+  html += `<tr class="section"><td colspan="4">Input Tax Credits</td></tr>`;
+
+  html += row("Input TCS Credit", base.TCS, discountResult?.TCS);
+  html += row("Input TDS Credit", base.TDS, discountResult?.TDS);
+  html += row("Input GST Credit", gstBase, gstDisc);
+
+  /* ===== SUMMARY ===== */
+
+  html += `<tr class="section"><td colspan="4">Summary</td></tr>`;
+
+  html += row("Listing Price", base.SP, discountResult?.SP);
+  html += row("Effective Net", base.EffectiveNet, discountResult?.EffectiveNet);
+
+  html += `</table>`;
+
+  resultCard.innerHTML = html;
+}
 
   populateCategories();
 }
