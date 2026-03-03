@@ -18,6 +18,8 @@ export function initUI(data) {
   populateCategoryFilter();
   applyFilters();
 
+  setupCalculator();   // ✅ ADD THIS LINE
+
   document.getElementById("searchInput")
     .addEventListener("input", applyFilters);
 
@@ -30,7 +32,6 @@ export function initUI(data) {
   document.getElementById("exportBtn")
     .addEventListener("click", exportFullData);
 }
-
 /* ================= URL BUILDER ================= */
 
 function buildProductURL(row) {
