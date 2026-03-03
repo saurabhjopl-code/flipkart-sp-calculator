@@ -325,25 +325,35 @@ table {
   font-size:14px;
 }
 
-.calc-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-  font-size:14px;
-}
-
-.calc-table td{
-  padding:6px 10px;
-  border-bottom:1px solid #eee;
-}
-
-.calc-header{
-  font-weight:600;
-  background:#f7f7f7;
-}
-
 .calc-section{
   font-weight:600;
   padding-top:12px;
 }
 
+.calc-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.calc-table td{
+  padding:4px 8px;
+  border-bottom:1px solid #eee;
+}
+
+.calc-table .val{
+  text-align:right;
+  font-weight:500;
+}
+
+.calc-header td{
+  background:#f5f5f5;
+  font-weight:600;
+}
+
+.section td{
+  background:#fafafa;
+  font-weight:600;
+  padding-top:8px;
+}
