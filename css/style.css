@@ -298,3 +298,22 @@ table {
   height: 36px;
   box-sizing: border-box;
 }
+
+.calc-input{
+  padding:8px;
+  min-width:180px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:14px;
+}
+
+#calcResult div{
+  margin-bottom:8px;
+  font-size:14px;
+}
+
+.result-highlight{
+  font-size:16px;
+  font-weight:600;
+  margin-top:12px;
+}
