@@ -269,3 +269,121 @@ function exportFullData() {
   a.download = activeMP + "_pricing_export.csv";
   a.click();
 }
+
+/* ================= CALCULATOR ADDITION ================= */
+
+function setupCalculator() {
+
+  const calcTab = document.getElementById("calculatorTab");
+  const calcSection = document.getElementById("calculatorSection");
+  const tableContainer = document.querySelector(".table-container");
+
+  const mpSelect = document.getElementById("calcMP");
+  const categorySelect = document.getElementById("calcCategory");
+  const brandSelect = document.getElementById("calcBrand");
+  const tpInput = document.getElementById("calcTP");
+  const resultDiv = document.getElementById("calcResult");
+
+  // Show calculator tab
+  calcTab.onclick = () => {
+
+    calcSection.style.display = "block";
+    tableContainer.style.display = "none";
+
+    document.getElementById("flipkartTab").classList.remove("active");
+    document.getElementById("myntraTab").classList.remove("active");
+    calcTab.classList.add("active");
+  };
+
+  function populateCalcCategories() {
+
+    const mp = mpSelect.value;
+
+    const categories = [
+      ...new Set(
+        allSKU
+          .filter(d => d.mp === mp)
+          .map(d => d.cat)
+      )
+    ];
+
+    categorySelect.innerHTML = "";
+
+    categories.forEach(cat => {
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      categorySelect.appendChild(opt);
+    });
+
+    populateCalcBrands();
+  }
+
+  function populateCalcBrands() {
+
+    const mp = mpSelect.value;
+    const category = categorySelect.value;
+
+    if (mp !== "MYNTRA") {
+      brandSelect.style.display = "none";
+      return;
+    }
+
+    brandSelect.style.display = "block";
+
+    const brands = [
+      ...new Set(
+        allSKU
+          .filter(d => d.mp === "MYNTRA" && d.cat === category)
+          .map(d => d.brand)
+      )
+    ];
+
+    brandSelect.innerHTML = "";
+
+    brands.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b;
+      opt.textContent = b;
+      brandSelect.appendChild(opt);
+    });
+  }
+
+  mpSelect.onchange = populateCalcCategories;
+  categorySelect.onchange = populateCalcBrands;
+
+  document.getElementById("calcBtn").onclick = () => {
+
+    const mp = mpSelect.value;
+    const cat = categorySelect.value;
+    const brand = brandSelect.value;
+    const TP = parseFloat(tpInput.value);
+
+    if (!TP) return;
+
+    const tempRow = {
+      cat,
+      simTP: TP,
+      mp,
+      brand
+    };
+
+    const result = calculateSP(tempRow, masterData);
+
+    resultDiv.innerHTML =
+      "SP: ₹" + result.SP.toFixed(2) +
+      " | GTA: ₹" + result.GTA.toFixed(2) +
+      " | Commission: ₹" + result.Commission.toFixed(2) +
+      " | Effective Net: ₹" + result.EffectiveNet.toFixed(2);
+  };
+
+  populateCalcCategories();
+}
+
+/* Activate calculator after UI loads */
+setTimeout(() => {
+  if (document.getElementById("calculatorTab")) {
+    setupCalculator();
+  }
+}, 300);
+
