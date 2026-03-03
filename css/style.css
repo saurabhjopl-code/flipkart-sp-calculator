@@ -317,3 +317,33 @@ table {
   font-weight:600;
   margin-top:12px;
 }
+.calc-input{
+  padding:8px;
+  min-width:150px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:14px;
+}
+
+.calc-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  font-size:14px;
+}
+
+.calc-table td{
+  padding:6px 10px;
+  border-bottom:1px solid #eee;
+}
+
+.calc-header{
+  font-weight:600;
+  background:#f7f7f7;
+}
+
+.calc-section{
+  font-weight:600;
+  padding-top:12px;
+}
+
