@@ -36,6 +36,32 @@
 <div class="marketplace-tabs">
   <button id="flipkartTab" class="tab-btn active">Flipkart</button>
   <button id="myntraTab" class="tab-btn">Myntra</button>
+  <button id="calculatorTab" class="tab-btn">Calculator</button>
+</div>
+  
+  <div id="calculatorSection" style="display:none; padding:25px; background:white; margin:20px;">
+  
+  <h3>Online Pricing Calculator</h3>
+
+  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:15px;">
+
+    <select id="calcMP">
+      <option value="FLIPKART">Flipkart</option>
+      <option value="MYNTRA">Myntra</option>
+    </select>
+
+    <select id="calcCategory"></select>
+
+    <select id="calcBrand" style="display:none;"></select>
+
+    <input type="number" id="calcTP" placeholder="Enter TP" />
+
+    <button id="calcBtn">Calculate</button>
+
+  </div>
+
+  <div id="calcResult" style="margin-top:20px; font-weight:600;"></div>
+
 </div>
   
 <div class="table-container">
