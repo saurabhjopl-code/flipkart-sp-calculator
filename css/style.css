@@ -330,30 +330,45 @@ table {
   padding-top:12px;
 }
 
+/* ===== CALCULATOR COMPACT LAYOUT ===== */
+
 .calc-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-  margin-top:10px;
+  width: 650px;              /* fixed compact width */
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 10px;
 }
 
 .calc-table td{
-  padding:4px 8px;
-  border-bottom:1px solid #eee;
+  padding: 4px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.calc-table td:first-child{
+  width: 260px;              /* fixed label width */
 }
 
 .calc-table .val{
-  text-align:right;
-  font-weight:500;
+  width: 120px;
+  text-align: center;        /* center alignment */
+  font-weight: 500;
 }
 
 .calc-header td{
   background:#f5f5f5;
   font-weight:600;
+  text-align:center;
+}
+
+.calc-header td:first-child{
+  text-align:left;
 }
 
 .section td{
   background:#fafafa;
   font-weight:600;
   padding-top:8px;
+  text-align:left;
 }
+
+
