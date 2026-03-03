@@ -270,7 +270,7 @@ function exportFullData() {
   a.click();
 }
 
-/* ================= CALCULATOR ADDITION ================= */
+/* ================= POLISHED CALCULATOR ================= */
 
 function setupCalculator() {
 
@@ -278,31 +278,49 @@ function setupCalculator() {
   const calcSection = document.getElementById("calculatorSection");
   const tableContainer = document.querySelector(".table-container");
 
-  const mpSelect = document.getElementById("calcMP");
+  const fkBtn = document.getElementById("calcFKBtn");
+  const myBtn = document.getElementById("calcMYBtn");
+
   const categorySelect = document.getElementById("calcCategory");
   const brandSelect = document.getElementById("calcBrand");
   const tpInput = document.getElementById("calcTP");
   const resultDiv = document.getElementById("calcResult");
+  const resultCard = document.getElementById("calcResultCard");
 
-  // Show calculator tab
+  let calcMP = "FLIPKART";
+
+  /* TAB CLICK */
   calcTab.onclick = () => {
-
     calcSection.style.display = "block";
     tableContainer.style.display = "none";
-
+    calcTab.classList.add("active");
     document.getElementById("flipkartTab").classList.remove("active");
     document.getElementById("myntraTab").classList.remove("active");
-    calcTab.classList.add("active");
   };
 
-  function populateCalcCategories() {
+  /* TOGGLE MP */
+  fkBtn.onclick = () => {
+    calcMP = "FLIPKART";
+    fkBtn.classList.add("active");
+    myBtn.classList.remove("active");
+    brandSelect.style.display = "none";
+    populateCategories();
+  };
 
-    const mp = mpSelect.value;
+  myBtn.onclick = () => {
+    calcMP = "MYNTRA";
+    myBtn.classList.add("active");
+    fkBtn.classList.remove("active");
+    brandSelect.style.display = "block";
+    populateCategories();
+  };
+
+  function populateCategories() {
 
     const categories = [
       ...new Set(
         allSKU
-          .filter(d => d.mp === mp)
+          .filter(d => d.mp === calcMP)
           .map(d => d.cat)
       )
     ];
@@ -316,25 +334,17 @@ function setupCalculator() {
       categorySelect.appendChild(opt);
     });
 
-    populateCalcBrands();
+    populateBrands();
   }
 
-  function populateCalcBrands() {
+  function populateBrands() {
 
-    const mp = mpSelect.value;
-    const category = categorySelect.value;
-
-    if (mp !== "MYNTRA") {
-      brandSelect.style.display = "none";
-      return;
-    }
-
-    brandSelect.style.display = "block";
+    if (calcMP !== "MYNTRA") return;
 
     const brands = [
       ...new Set(
         allSKU
-          .filter(d => d.mp === "MYNTRA" && d.cat === category)
+          .filter(d => d.mp === "MYNTRA" && d.cat === categorySelect.value)
           .map(d => d.brand)
       )
     ];
@@ -349,41 +359,39 @@ function setupCalculator() {
     });
   }
 
-  mpSelect.onchange = populateCalcCategories;
-  categorySelect.onchange = populateCalcBrands;
+  categorySelect.onchange = populateBrands;
 
   document.getElementById("calcBtn").onclick = () => {
 
-    const mp = mpSelect.value;
-    const cat = categorySelect.value;
-    const brand = brandSelect.value;
     const TP = parseFloat(tpInput.value);
-
     if (!TP) return;
 
     const tempRow = {
-      cat,
+      cat: categorySelect.value,
       simTP: TP,
-      mp,
-      brand
+      mp: calcMP,
+      brand: brandSelect.value
     };
 
     const result = calculateSP(tempRow, masterData);
 
-    resultDiv.innerHTML =
-      "SP: ₹" + result.SP.toFixed(2) +
-      " | GTA: ₹" + result.GTA.toFixed(2) +
-      " | Commission: ₹" + result.Commission.toFixed(2) +
-      " | Effective Net: ₹" + result.EffectiveNet.toFixed(2);
+    resultCard.style.display = "block";
+
+    resultDiv.innerHTML = `
+      <div><b>SP:</b> ₹${result.SP.toFixed(2)}</div>
+      <div><b>GTA:</b> ₹${result.GTA.toFixed(2)}</div>
+      ${calcMP === "MYNTRA" ? `<div><b>Level:</b> ${result.Level || "-"}</div>` : ""}
+      <div><b>Commission:</b> ₹${result.Commission.toFixed(2)}</div>
+      <div><b>Fixed Fee:</b> ₹${result.Fixed.toFixed(2)}</div>
+      <div><b>Collection Fee:</b> ₹${result.Collection.toFixed(2)}</div>
+      <div><b>Input GST:</b> ₹${result.InputGSTCredit.toFixed(2)}</div>
+      <div><b>TDS:</b> ₹${result.TDS.toFixed(2)}</div>
+      <div><b>TCS:</b> ₹${result.TCS.toFixed(2)}</div>
+      <div class="result-highlight"><b>Effective Net:</b> ₹${result.EffectiveNet.toFixed(2)}</div>
+    `;
   };
 
-  populateCalcCategories();
+  populateCategories();
 }
 
-/* Activate calculator after UI loads */
-setTimeout(() => {
-  if (document.getElementById("calculatorTab")) {
-    setupCalculator();
-  }
-}, 300);
 
